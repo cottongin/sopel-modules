@@ -1,4 +1,5 @@
-import sopel.module
+from sopel import module
+
 from sopel.formatting import *
 from sopel.config.types import StaticSection, ValidatedAttribute
 
@@ -6,9 +7,32 @@ import pendulum
 import tweepy
 import re
 
+# from Supybot/Limnoria utils.str
+def _normalizeWhitespace(s, removeNewline=True):
+    r"""Normalizes the whitespace in a string; \s+ becomes one space."""
+    if not s:
+        return str(s) # not the same reference
+    starts_with_space = (s[0] in ' \n\t\r')
+    ends_with_space = (s[-1] in ' \n\t\r')
+    if removeNewline:
+        newline_re = re.compile('[\r\n]+')
+        s = ' '.join(filter(bool, newline_re.split(s)))
+    s = ' '.join(filter(bool, s.split('\t')))
+    s = ' '.join(filter(bool, s.split(' ')))
+    if starts_with_space:
+        s = ' ' + s
+    if ends_with_space:
+        s += ' '
+    return s
+
 class APIKey(StaticSection):
     consumer_key = ValidatedAttribute('consumer_key', str)
     consumer_secret = ValidatedAttribute('consumer_secret', str)
+
+def configure(config):
+    config.define_section('twitter', APIKey, validate=False)
+    config.twitter.configure_setting('consumer_key', '')
+    config.twitter.configure_setting('consumer_secret', '')
 
 def setup(bot):
     bot.config.define_section('twitter', APIKey)
@@ -20,11 +44,6 @@ def setup(bot):
         exclude[regex] = tweetinfo
         bot.memory['url_callbacks'] = exclude
 
-def configure(config):
-    config.define_section('twitter', APIKey, validate=False)
-    config.twitter.configure_setting('consumer_key', '')
-    config.twitter.configure_setting('consumer_secret', '')
-
 def _twitter_auth(bot):
     # Auth stuff
     consumer_key = bot.config.twitter.consumer_key
@@ -35,16 +54,17 @@ def _twitter_auth(bot):
     api = tweepy.API(auth)
     return api
 
-
 def _parse_status(status):
     try:
         tweet_text = "RT " + status.retweeted_status.full_text
     except AttributeError:  # Not a Retweet
         tweet_text = status.full_text
+    tweet_text = _normalizeWhitespace(tweet_text)
     user = status.author.screen_name
     created_at = pendulum.parse(str(status.created_at), strict=False)
     if status.author.verified:
         user += color("✓", "white", "blue")
+    user += " - {}".format(status.author.name)
     diff = created_at.diff_for_humans()#.in_words()
     try:
         # retweets, likes
@@ -57,8 +77,8 @@ def _parse_status(status):
     reply_string = f"\x02(@{user})\x02 {tweet_text} | {diff}{tag}"
     return reply_string
 
-@sopel.module.commands('twitter', 't')
-@sopel.module.example('.twitter realDonaldTrump')
+@module.commands('twitter', 't')
+@module.example('.twitter realDonaldTrump')
 def twitter(bot, trigger):
     """Fetches most recent tweet from provided user"""
 
@@ -78,8 +98,8 @@ def twitter(bot, trigger):
     except:
         return bot.reply("I couldn't find a twitter user by that handle ({})".format(user_input))
 
-@sopel.module.commands('tsearch', 'ts')
-@sopel.module.example('.tsearch donald trump')
+@module.commands('tsearch', 'ts')
+@module.example('.tsearch donald trump')
 def tsearch(bot, trigger):
     """Searches twitter"""
 
@@ -96,7 +116,7 @@ def tsearch(bot, trigger):
     else:
         return bot.reply("I couldn't find any results for that query")
 
-@sopel.module.rule('.*(twitter.com\/.*\/status\/)([\w-]+).*')
+@module.rule('.*(twitter.com\/.*\/status\/)([\w-]+).*')
 def tweetinfo(bot, trigger, found_match=None):
     match = found_match or trigger
     tweet_id = match.group(2)

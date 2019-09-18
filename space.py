@@ -5,6 +5,8 @@ import requests
 import urllib.parse
 import pendulum
 
+import re
+
 # from Supybot/Limnoria utils.str
 def _normalizeWhitespace(s, removeNewline=True):
     r"""Normalizes the whitespace in a string; \s+ becomes one space."""
@@ -94,7 +96,7 @@ def launch(bot, trigger):
     for line in parsed_data:
         bot.say(line)
 
-@sopel.module.commands('spacex', '🚀')
+@sopel.module.commands('spacex')
 @sopel.module.example('.spacex')
 def spacex(bot, trigger):
     """Fetches next scheduled SpaceX rocket launch."""
