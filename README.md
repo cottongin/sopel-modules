@@ -11,6 +11,21 @@ A collection of misc sopel modules
 
 ## Modules
 
+### Quick Start
+
+Module | Commands | Description
+------ | -------- | -----------
+exchange | `.exchange` (`.x`, `.xe`) | converts currencies
+gas | `.gas` (`.gasbuddy`) | fetches gas prices
+odds | `.odds` | fetches sports odds
+space | `.launch` (`.space`) | fetches information on next rocket launch
+space | `.spacex` | fetches information on next SpaceX launch
+twitter* | `.twitter` (`.t`) | fetches most recent tweet
+twitter* | `.tsearch` (`.ts`) | fetches at most 3 tweets via search
+wolfram* | `.wolfram` (`.wa`) | queries Wolfram Alpha
+
+*API key(s) required
+
 ### exchange
 
 This module converts a provided amount in one currency to another (e.g. `.exchange 10 usd to cad`)
