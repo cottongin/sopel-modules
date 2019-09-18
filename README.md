@@ -24,7 +24,7 @@ twitter* | `.twitter` (`.t`) | fetches most recent tweet
 twitter* | `.tsearch` (`.ts`) | fetches at most 3 tweets via search
 wolfram* | `.wolfram` (`.wa`) | queries Wolfram Alpha
 
-*API key(s) required
+_*API key(s) required_
 
 ### exchange
 
