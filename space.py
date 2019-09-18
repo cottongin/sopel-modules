@@ -38,7 +38,10 @@ def _parse_results(data, desc=None):
         prob = f" ({data['probability']}%)" if data['probability'] > 0 else ""
     else:
         prob = ""
-    mission = f"{bold(data['mission']['name'])}: {_normalizeWhitespace(data['mission']['description'])}"
+    try:
+        mission = f"{bold(data['mission']['name'])}: {_normalizeWhitespace(data['mission']['description'])}"
+    except:
+        mission = None
 
     landing = None
     rocket = None
@@ -60,7 +63,7 @@ def _parse_results(data, desc=None):
     lines = []
     lines.append(f"{name} from {location}")
     lines.append(f"{when.format('MMMM Do, YYYY - h:mm A z')}")
-    lines.append(mission)
+    if mission: lines.append(mission)
     if rocket:
         if landing:
             lines.append(rocket + " " + landing)
