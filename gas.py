@@ -32,7 +32,10 @@ def gas(bot, trigger):
     except:
         return bot.reply('ERROR: Something went wrong searching for your query: {}'.format(query))
     
-    region_trends = search_results['trends'][0]
+    try:
+        region_trends = search_results['trends'][0]
+    except:
+        return bot.reply('ERROR: Something went wrong parsing search results (try again?)')
     
     stationIds = ''
     for station in search_results['stations']:
