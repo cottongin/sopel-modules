@@ -20,6 +20,7 @@ gas | `.gas` (`.gasbuddy`) | fetches gas prices
 odds | `.odds` | fetches sports odds
 space | `.launch` (`.space`) | fetches information on next rocket launch
 space | `.spacex` | fetches information on next SpaceX launch
+spongebob | `.spongebob` (`.sb`, `.sbl`) | generates a sPoNgEbOb meme image
 twitter* | `.twitter` (`.t`) | fetches most recent tweet
 twitter* | `.tsearch` (`.ts`) | fetches at most 3 tweets via search
 wolfram* | `.wolfram` (`.wa`) | queries Wolfram Alpha
@@ -75,3 +76,11 @@ This module queries the Wolfram Alpha API with user provided input (e.g. `.wolfr
 ![wolfram demo](https://i.imgur.com/jEgJpzU.png)
 
 Once you have acquired your Wolfram Alpha API key you can set it in a PM with the bot via `.set wolfram.api_key <your api key>`
+
+### spongebob
+
+**Requires lots of configuration and a [linx.li](https://linx.li) server**
+
+This module generates a sPoNgEbOb meme image based on user input, it requires a lot of configuration and your own [linx.li](https://linx.li) server so I am not going into detail here on how to get it working.
+
+The source code is there if you'd like to give it a shot yourself
