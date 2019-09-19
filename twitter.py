@@ -56,11 +56,13 @@ def _twitter_auth(bot):
 
 def _parse_status(status):
     try:
-        tweet_text = "RT " + status.retweeted_status.full_text
+        tweet_text = color("[RT] ", "red") + status.retweeted_status.full_text
+        rt = True
     except AttributeError:  # Not a Retweet
         tweet_text = status.full_text
+        rt = False
     tweet_text = _normalizeWhitespace(tweet_text)
-    user = status.author.screen_name
+    user = color(status.author.screen_name, "cyan")
     created_at = pendulum.parse(str(status.created_at), strict=False)
     if status.author.verified:
         user += color("✓", "white", "blue")
@@ -69,8 +71,8 @@ def _parse_status(status):
     try:
         # retweets, likes
         tag = " | 🔃{} ❤️{}".format(
-            status.retweet_count,
-            status.favorite_count,
+            status.retweet_count if not rt else status.retweeted_status.retweet_count,
+            status.favorite_count if not rt else status.retweeted_status.favorite_count,
         )
     except:
         tag = ""
