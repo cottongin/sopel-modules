@@ -6,6 +6,7 @@ from sopel.config.types import StaticSection, ValidatedAttribute
 import pendulum
 import tweepy
 import re
+import html
 
 # from Supybot/Limnoria utils.str
 def _normalizeWhitespace(s, removeNewline=True):
@@ -61,6 +62,7 @@ def _parse_status(status):
     except AttributeError:  # Not a Retweet
         tweet_text = status.full_text
         rt = False
+    tweet_text = html.unescape(tweet_text)
     tweet_text = _normalizeWhitespace(tweet_text)
     user = color(status.author.screen_name, "cyan")
     created_at = pendulum.parse(str(status.created_at), strict=False)
