@@ -29,7 +29,7 @@ def wolfram(bot, trigger):
     if not user_input:
         return bot.reply("Uhhh... what do you want me to lookup?")
     try:
-        args = shlex.split(user_input)
+        args = user_input.split()
     except:
         return bot.reply("Check your input")
     show_full = False
