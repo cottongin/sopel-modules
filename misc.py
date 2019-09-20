@@ -29,9 +29,9 @@ def stats(bot, trigger):
     s = subprocess.check_output(["uptime"])
     parts = s.decode().split(",")
     output = []
-    output.append("🕒 {}".format(parts[0].strip()))
-    output.append("👥 {}".format(parts[1].strip()))
-    output.append("📈{}".format(",".join(parts[2:])))
+    output.append("🕒 {}, {}".format(parts[0].strip(), parts[1].strip()))
+    output.append("👥 {}".format(parts[2].strip()))
+    output.append("📈{}".format(",".join(parts[3:])))
     # output.append("🕒 {}".format(parts[0]))
     # output.append("🕒 {}".format(parts[0]))
     out_str = " :: ".join(output)
