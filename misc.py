@@ -3,6 +3,7 @@ from sopel import module
 from sopel.formatting import *
 
 import subprocess
+import random
 
 
 def configure(config):
@@ -21,6 +22,29 @@ def source(bot, trigger):
     url = "https://github.com/cottongin/sopel-modules"
 
     return bot.say(f"You can find the source to my custom modules here: {url}")
+
+
+@module.commands('pick', 'choose', 'p', 'c')
+@module.example('.pick eat, don\'t eat')
+def pick(bot, trigger):
+    """Returns a random choice from user-provided comma separated list"""
+    choices = trigger.group(2)
+    if not choices:
+        return bot.reply("You gotta give me something to choose from!")
+    if "," not in choices:
+        if " or " in choices.lower():
+            choices = choices.split(" or ")
+        else:
+            choices = choices.split()
+    else:
+        choices = choices.split(",")
+    if len(choices) == 1:
+        return bot.reply("What do you expect from me?")
+    elif len(choices) >= 50:
+        return bot.reply("Way too many things to choose from, try thinking for yourself!")
+    choice = random.choice(choices)
+    return bot.reply("{}".format(bold(choice.strip())))
+
 
 @module.commands('uptime', 'stats')
 @module.example('.uptime')
