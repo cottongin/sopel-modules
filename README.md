@@ -23,6 +23,7 @@ space | `.spacex` | fetches information on next SpaceX launch
 spongebob | `.spongebob` (`.sb`, `.sbl`) | generates a sPoNgEbOb meme image
 twitter* | `.twitter` (`.t`) | fetches most recent tweet
 twitter* | `.tsearch` (`.ts`) | fetches at most 3 tweets via search
+urbandictionary  `.urbandictionary` (`.ud`) | fetches definition from Urban Dictionary
 wolfram* | `.wolfram` (`.wa`) | queries Wolfram Alpha
 
 _*API key(s) required_
@@ -66,6 +67,10 @@ This module interacts with the Twitter API
   - ![tsearch demo](https://i.imgur.com/pTovk2p.png)
 
 Once you have acquired Twitter API keys you can set them in a PM with the bot via `.set twitter.consumer_key <your key>` and `.set twitter.consumer_secret <your secret>`
+
+### urbandictionary
+
+This module fetches definitions from Urban Dictionary.  Use `--worst` to fetch the worst-rated definition.  If no input/word is provided, will fetch a random word.
 
 ### wolfram
 
