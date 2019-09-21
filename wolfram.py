@@ -63,6 +63,7 @@ def wolfram(bot, trigger):
 
     interp = None
     result = None
+    rank = 100000
     for pod in results:
         if not pod.get("id"):
             continue
@@ -70,7 +71,9 @@ def wolfram(bot, trigger):
             if pod["id"] == "Input":
                 interp = pod
             elif pod.get("primary"):
-                result = pod
+                if pod["position"] < rank:
+                    result = pod
+                    rank = pod["position"]
 
     if not result:
         return bot.reply(f"I couldn't find an answer for your query! ({interp['subpods'][0]['plaintext']})")
