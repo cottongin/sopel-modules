@@ -57,7 +57,7 @@ def _twitter_auth(bot):
 
 def _parse_status(status):
     try:
-        tweet_text = color("[RT] ", "red") + status.retweeted_status.full_text
+        tweet_text = color("[RT @{}] ".format(status.retweeted_status.author.screen_name), "red") + status.retweeted_status.full_text
         rt = True
     except AttributeError:  # Not a Retweet
         tweet_text = status.full_text
