@@ -61,7 +61,7 @@ def urbandictionary(bot, trigger):
     replies = _parse_definition(results["list"], worst)
     
     for reply in replies:
-        bot.say(reply)
+        bot.say(reply, max_messages=3)
 
     return
 
