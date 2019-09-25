@@ -21,7 +21,7 @@ def configure(config):
 @sopel.module.commands('wolfram', 'wa')
 @sopel.module.example('.wa tallest building in the world')
 def wolfram(bot, trigger):
-    """Query Wolfram Alpha"""
+    """Query the Wolfram Alpha API. Use --full (or -f) in your query to show how the API is interpreting your input."""
     api_key = bot.config.wolfram.api_key
     if api_key == "Wolfram Alpha API Key":
         return bot.say("I need a proper Wolfram Alpha API key to work")
@@ -80,9 +80,18 @@ def wolfram(bot, trigger):
 
     tmp = []
     for t in result['subpods']:
-        tmp.append(t['plaintext'].replace("\n", ", "))
+        t['plaintext'] = t['plaintext'].replace("\n", " $%$ ")
+        if "|" in t['plaintext']:
+            pipes = t['plaintext'].split()
+            for idx,word in enumerate(pipes):
+                if word == "|":
+                    pipes[idx-1] = bold("({})".format(pipes[idx-1]))
+                    pipes.pop(idx)
+            tmp.append(" ".join(pipes).replace("$%$", "|"))
+        else:
+            tmp.append(t['plaintext'].replace("$%$", "|"))
 
     if show_full:
         bot.say(f"{bold(interp['title'])}: {interp['subpods'][0]['plaintext']}")
-    output = f"{bold(result['title'])}: {', '.join(tmp)}"
+    output = f"{bold(result['title'])}: {' | '.join(tmp)}"
     bot.say(output, max_messages=2)
