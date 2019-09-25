@@ -57,6 +57,7 @@ def twitch_api(bot, stream_list):
     return requests.get('https://api.twitch.tv/kraken/streams', params={"channel": ",".join(stream_list)}, headers={"Client-ID": twitchclientid,"Accept":"application/vnd.twitchtv.v5+json"}).json()
 
 def gettwitchuserid(bot, tuser):
+    tuser = tuser.strip().lower()
     twitchclientid = bot.config.twitch.client_id
     tuid = requests.get("https://api.twitch.tv/kraken/users?login={}".format(tuser.lower()),headers={"Client-ID":twitchclientid,"Accept":"application/vnd.twitchtv.v5+json"}).json()
     if not tuid['users']:
