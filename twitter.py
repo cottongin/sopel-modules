@@ -81,7 +81,7 @@ def _parse_status(status):
     reply_string = f"\x02(@{user})\x02 {tweet_text} | {diff}{tag}"
     return reply_string
 
-@module.commands('twitter', 't')
+@module.commands('twitter', 'tw')
 @module.example('.twitter realDonaldTrump')
 def twitter(bot, trigger):
     """Fetches most recent tweet from provided user"""
