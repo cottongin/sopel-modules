@@ -25,7 +25,7 @@ def exchange(bot, trigger):
         except:
             return bot.reply("I couldn't parse your input!")
     base = user_input[1].upper()
-    if user_input[2] == "to":
+    if user_input[2].lower() == "to" or user_input[2].lower() == "in":
         conv = user_input[3].upper()
     else:
         conv = user_input[2].upper()
