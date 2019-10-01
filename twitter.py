@@ -1,7 +1,7 @@
 from sopel import module
 
 from sopel.formatting import *
-from sopel.config.types import StaticSection, ValidatedAttribute
+from sopel.config.types import StaticSection, ValidatedAttribute, ListAttribute
 
 import pendulum
 import tweepy
@@ -29,11 +29,13 @@ def _normalizeWhitespace(s, removeNewline=True):
 class APIKey(StaticSection):
     consumer_key = ValidatedAttribute('consumer_key', str)
     consumer_secret = ValidatedAttribute('consumer_secret', str)
+    blacklist = ListAttribute('blacklist')
 
 def configure(config):
     config.define_section('twitter', APIKey, validate=False)
     config.twitter.configure_setting('consumer_key', '')
     config.twitter.configure_setting('consumer_secret', '')
+    # config.twitter.configure_setting('blacklist', '')
 
 def setup(bot):
     bot.config.define_section('twitter', APIKey)
@@ -113,7 +115,23 @@ def tsearch(bot, trigger):
     if not user_input:
         return bot.reply("Uhhh... what do you want to search for?")
 
-    data = api.search(q=f"{user_input}", count=3, result_type="mixed", tweet_mode="extended")
+    result_type = "mixed"
+    check_input = user_input.split()
+    tmp = user_input.split()
+    for arg in tmp:
+        if "--" in arg:
+            check_input.remove(arg)
+            arg = arg.replace("--", "").lower()
+            if arg == "recent":
+                result_type = "recent"
+            elif arg == "popular":
+                result_type = "popular"
+            elif arg == "noretweets" or arg == "no-retweets":
+                check_input.append("-filter:retweets")
+    user_input = " ".join(check_input)
+    print(f'query={user_input}', f'result_type={result_type}')
+
+    data = api.search(q=f"{user_input}", count=3, result_type=result_type, lang="en", tweet_mode="extended")
     if data:
         for status in data:
             bot.say(_parse_status(status))
@@ -122,6 +140,13 @@ def tsearch(bot, trigger):
 
 @module.rule('.*(twitter.com\/.*\/status\/)([\w-]+).*')
 def tweetinfo(bot, trigger, found_match=None):
+    try:
+        blacklist = bot.config.twitter.blacklist
+    except:
+        pass
+    if blacklist:
+        if trigger.sender in blacklist:
+            return
     match = found_match or trigger
     tweet_id = match.group(2)
     
