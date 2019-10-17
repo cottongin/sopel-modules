@@ -16,7 +16,7 @@ def setup(bot):
     pass
 
 
-@module.commands('figlet', 'f')
+@module.commands('figlet', 'f', 'fig')
 @module.example('.figlet BIG TEXT')
 def figlet(bot, trigger):
     """Sends BIG TEXT"""
