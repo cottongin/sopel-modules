@@ -23,13 +23,19 @@ def _normalizeWhitespace(s, removeNewline=True):
         s = ' ' + s
     if ends_with_space:
         s += ' '
+    if len(s) > 200:
+        s = s[:199] + "…"
     return s
 
 def _parse_results(data, desc=None):
     # parses data from API
-    data = data["results"][0]
-    name = bold(data['name'])
-    location = data['pad']['name']
+    try:
+        tmp = data["results"][0]
+        data = requests.get(tmp['url']).json()
+    except:
+        data = data["results"][0]
+    name = data['name']
+    location = "{} ({})".format(data['pad']['name'], data['pad']['location']['name']) 
     when = pendulum.parse(data['net'], tz="UTC")
     status = data['status']['name']
     if "Go" in status:
@@ -39,7 +45,8 @@ def _parse_results(data, desc=None):
     else:
         prob = ""
     try:
-        mission = f"{bold(data['mission']['name'])}: {_normalizeWhitespace(data['mission']['description'])}"
+        # {data['mission']['name']} -> 
+        mission = f"{_normalizeWhitespace(data['mission']['description'])}"
     except:
         mission = None
 
@@ -61,21 +68,29 @@ def _parse_results(data, desc=None):
             #TBD
             pass
     lines = []
-    lines.append(f"{name} from {location}")
-    lines.append(f"{when.format('MMMM Do, YYYY - h:mm A z')}")
-    if mission: lines.append(mission)
+    if status != "TBD":
+        lines.append(f"\x02[Launch]\x02 {name} from {location} \x02[When]\x02 {when.format('MMM Do @ h:mm A')} UTC \x02[Status]\x02 {status}{prob}")
+    else:
+        lines.append(f"\x02[Launch]\x02 {name} from {location} \x02[When]\x02 {when.format('MMM Do @ h:mm A')} UTC")
+    if mission: lines.append("\x02[Mission]\x02 " + mission)
+    if data.get('vidURLs'):
+        vid = " \x02[Watch]\x02 {}".format(', '.join(data['vidURLs']))
+    else:
+        vid = ""
+    if when.diff(None, False).seconds < 0:
+        stub = "-"
+    else:
+        stub = "+"
+    if not vid: lines.append(f"\x02[Clock]\x02 T{stub}{when.diff().in_words()}{vid}")
+    line = " ".join(lines)
+    lines = []
+    lines.append(line)
     if rocket:
         if landing:
             lines.append(rocket + " " + landing)
         else:
             lines.append(rocket)
-    if status != "TBD":
-        lines.append(f"\x02Status\x02: {status}{prob}")
-    if data.get('vidURLs'):
-        vid = " | {}".format(', '.join(data['vidURLs']))
-    else:
-        vid = ""
-    lines.append(f"T-{when.diff().in_words()}{vid}")
+    if vid: lines.append(f"\x02[Clock]\x02 T{stub}{when.diff().in_words()}{vid}")
 
     return lines
 
