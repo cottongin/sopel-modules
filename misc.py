@@ -47,14 +47,6 @@ def pick(bot, trigger):
     choice = random.choice(choices)
     return bot.reply("{}".format(bold(choice.strip())))
 
-@module.commands('figlet', 'f')
-@module.example('.figlet BIG TEXT')
-def figlet(bot, trigger):
-    """Sends BIG TEXT"""
-    f = Figlet(font='standard')
-    for l in f.renderText(trigger.group(2) or "").rsplit("\n"):
-        bot.say(l)
-
 
 @module.commands('uptime', 'stats')
 @module.example('.uptime')
