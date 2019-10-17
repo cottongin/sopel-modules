@@ -21,7 +21,7 @@ gas | `.gas` (`.gasbuddy`) | fetches gas prices
 misc | `.pick` | picks a random choice from input
 misc | `.source` | outputs a link to this repository
 misc | `.uptime` | outputs bot uptime information
-nhl | `.nhlplayer` | fetches bio information for provided player lookup (<team> <roster #>)
+nhl | `.nhlplayer` | fetches bio information for provided player lookup (\<team\> \<roster #\>)
 odds | `.odds` | fetches sports odds
 podcasts | | module with various commands for looking up podcast information
 soma | | module with various commands for fetching information from somafm
@@ -31,7 +31,7 @@ spongebob | `.spongebob` (`.sb`, `.sbl`) | generates a sPoNgEbOb meme image
 twitch | | module that fetches more detailed information from twitch links
 twitter* | `.twitter` (`.t`) | fetches most recent tweet
 twitter* | `.tsearch` (`.ts`) | fetches at most 3 tweets via search
-urbandictionary  `.urbandictionary` (`.ud`) | fetches definition from Urban Dictionary
+urbandictionary | `.urbandictionary` (`.ud`) | fetches definition from Urban Dictionary
 wolfram* | `.wolfram` (`.wa`) | queries Wolfram Alpha
 
 _*API key(s) required_
