@@ -24,7 +24,7 @@ def hueg_text(bot, trigger):
 
     # parse messageut & assign colors
     message = _strip(message)
-    colors = _color_picker() # can send max_value=1-99 to alter choice range
+    colors = _color_picker(max_value=99) # can send max/min_value=0-99 to alter choice range
     parsed_message = _parse(message) # max_chars=10
     if len(parsed_message) > 3:
         return bot.reply("Sorry, that message is too long")
@@ -39,11 +39,28 @@ def _strip(message):
     return ''.join(char for char in message if ord(char) < 128)
 
 
-def _color_picker(max_value=15):
-    random_color1 = random.randint(1, max_value)
+def _color_picker(min_value=2, max_value=15):
+    # Blocked colors
+    fg_blocked_colors = [
+        0,1,
+        88,89,98,99,
+    ]
+    fg_blocked_colors.extend(range(16,52))
+    bg_blocked_colors = [
+        0,1,
+        88,89,98,99,
+    ]
+    bg_blocked_colors.extend(range(52,88))
+    # pick some random colors and make sure they aren't similar or the same
+    random_color1 = random_color2 = 0
+    while random_color1 in fg_blocked_colors:
+        random_color1 = random.randint(min_value, max_value)
     random_color2 = random_color1
-    while random_color2 == random_color1:
-        random_color2 = random.randint(1, max_value)
+    while random_color2 == random_color1 or random_color2 in bg_blocked_colors \
+    or abs(random_color2 - random_color1) <= 2 \
+    or 12 <= abs(random_color2 - random_color1) <= 13:
+        random_color2 = random.randint(min_value, max_value)
+    # zero pad and assign/return
     random_color1 = str(random_color1).rjust(2, '0')
     random_color2 = str(random_color2).rjust(2, '0')
     return [
