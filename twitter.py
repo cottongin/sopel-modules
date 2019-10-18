@@ -143,7 +143,7 @@ def tweetinfo(bot, trigger, found_match=None):
     try:
         blacklist = bot.config.twitter.blacklist
     except:
-        pass
+        blacklist = None
     if blacklist:
         if trigger.sender in blacklist:
             return
