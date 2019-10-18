@@ -1,5 +1,5 @@
 import sopel.module
-from sopel.formatting import *
+from sopel.formatting import color, bold
 
 import requests
 import urllib.parse

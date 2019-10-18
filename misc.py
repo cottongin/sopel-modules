@@ -1,6 +1,6 @@
 from sopel import module
 
-from sopel.formatting import *
+from sopel.formatting import bold, color
 
 import subprocess
 import random
