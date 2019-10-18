@@ -1,7 +1,5 @@
 from sopel import module
 
-from sopel.formatting import color
-
 import random
 import re
 
