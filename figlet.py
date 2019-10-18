@@ -1,10 +1,5 @@
 from sopel import module
 
-from sopel.formatting import *
-
-import subprocess
-import random
-
 from pyfiglet import Figlet
 
 
@@ -18,8 +13,9 @@ def setup(bot):
 
 @module.commands('figlet', 'f', 'fig')
 @module.example('.figlet BIG TEXT')
+@module.rate(user=30, channel=10)
 def figlet(bot, trigger):
     """Sends BIG TEXT"""
-    f = Figlet(font='standard')
-    for l in f.renderText(trigger.group(2) or "").rsplit("\n"):
-        bot.say(l)
+    fig = Figlet(font='standard')
+    for let in fig.renderText(trigger.group(2) or "").rsplit("\n"):
+        bot.say(let)
