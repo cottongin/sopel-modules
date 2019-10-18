@@ -28,14 +28,16 @@ def hueg_text(bot, trigger):
     parsed_message = _parse(message) # max_chars=10
     if len(parsed_message) > 3:
         return bot.reply("Sorry, that message is too long")
-    processed_message = _process(parsed_message, colors)
+    processed_message = _process(parsed_message, colors) # scale=1
 
     # reply
     for line in processed_message:
         bot.write(['PRIVMSG', trigger.sender], line)
 
+
 def _strip(message):
     return ''.join(char for char in message if ord(char) < 128)
+
 
 def _color_picker(max_value=15):
     random_color1 = random.randint(1, max_value)
@@ -48,6 +50,7 @@ def _color_picker(max_value=15):
         "\x03{choice},{choice}".format(choice=random_color2),
         "\x03{choice},{choice}".format(choice=random_color1),
         "\x03"]
+
 
 def _parse(message, max_chars=10):
     # split long strings
@@ -68,6 +71,7 @@ def _parse(message, max_chars=10):
             strings_list.append("{} ".format(word))
 
     return strings_list
+
 
 def _process(messages, colors, scale=1):
     lines = []
