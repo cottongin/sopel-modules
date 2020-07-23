@@ -3,11 +3,12 @@
 A collection of misc sopel modules
 
 ## Requirements
-- Sopel
+- Python 3.6+
+- Sopel (v7+)
 - tweepy (for the twitter module)
 - pendulum (for the odds, space, and twitter modules)
 
-(these modules are **all** written for Python 3.6+, your mileage may vary if running on earlier versions of Python)
+(these modules are **all** written for Python 3.6+, your mileage may vary if running on earlier versions of Python, and tested/run on Sopel 7)
 
 ## Modules
 
@@ -33,6 +34,7 @@ A collection of misc sopel modules
 |                 | `.tsearch` (`.ts`)           | fetches at most 3 tweets via search                                        |
 | urbandictionary | `.urbandictionary` (`.ud`)   | fetches definition from Urban Dictionary                                   |
 | wolfram*        | `.wolfram` (`.wa`)           | queries Wolfram Alpha                                                      |
+| steam           | `.steam`                     | queries the Steam Store and returns basic info                             |
 
 _*API key(s) required_
 
@@ -97,3 +99,16 @@ Once you have acquired your Wolfram Alpha API key you can set it in a PM with th
 This module generates a sPoNgEbOb meme image based on user input, it requires a lot of configuration and your own [linx.li](https://linx.li) server so I am not going into detail here on how to get it working.
 
 The source code is there if you'd like to give it a shot yourself
+
+### steam
+
+**Requires my custom argparser which I haven't published yet, Coming Some Day™**, but should be able to made to function without it with minimal effort
+
+This module queries the [Steam Store](https://store.steampowered.com) for a user provided game and returns basic information.
+
+```
+<cottongin> ?steam half-life
+<sopel> [Steam] Half-Life: Alyx | $59.99 | OS: Windows | Genres: Action, Adventure | Developer/Publisher: Valve | Released: Mar 23, 2020 | https://store.steampowered.com/app/546560/HalfLife_Alyx
+```
+
+It uses the Steam Store's search autosuggestion (first result only, for now) and isn't very configurable.
