@@ -20,6 +20,7 @@ SEARCH_URL = ("https://store.steampowered.com/search/suggest?term={query}"
               "&f=games&cc={region}&realm=1&l=english"
               "&excluded_content_descriptors%5B%5D=3"
               "&excluded_content_descriptors%5B%5D=4&v=9008005")
+REVIEWS_URL = "https://store.steampowered.com/appreviewhistogram/{app_id}"
 
 @module.commands('steam')
 @module.example('.steam Half-Life 3')
@@ -51,7 +52,9 @@ def get_steam_info(bot, trigger):
         else:
             game_details = v['data']
 
-    reply = _parse_game(game_data, game_details)
+    reviews = _fetch_game_reviews(game_data['id'])
+
+    reply = _parse_game(game_data, game_details, reviews)
 
     bot.say(reply, max_messages=2)
 
@@ -74,6 +77,15 @@ def _fetch_game_details(game_id):
     except:
         return None
 
+def _fetch_game_reviews(game_id):
+    try:
+        response = requests.get(REVIEWS_URL.format(app_id=game_id))
+        LOGGER.info(response.url)
+        response = response.json()
+        return response
+    except:
+        return None
+
 def _parse_html(html, fetch_price=False):
     first_result = html.find('a')
     if not first_result:
@@ -88,7 +100,7 @@ def _parse_html(html, fetch_price=False):
         out['price'] = html.find('div', class_='match_price').text
     return out
 
-def _parse_game(game_data, game_details):
+def _parse_game(game_data, game_details, reviews):
     out = "[Steam] "
     out += bold(game_details['name']) if game_details else bold(game_data['name'])
 
@@ -141,6 +153,27 @@ def _parse_game(game_data, game_details):
     )
 
     # out += " | {}".format(game_details['short_description'])
+    if reviews:
+        if reviews.get('results'):
+            results = reviews['results']
+            if results.get('recent'):
+                recent_pos = 0
+                recent_neg = 0
+                overall_pos = 0
+                overall_neg = 0
+                for rev in results['recent']:
+                    recent_pos += rev['recommendations_up']
+                    recent_neg += rev['recommendations_down']
+                for rev in results['rollups']:
+                    overall_pos += rev['recommendations_up']
+                    overall_neg += rev['recommendations_down']
+                total_recent = recent_neg + recent_pos
+                total_overall = overall_neg + overall_pos
+                out += " | {:3.0%} 30-day positive, {:3.0%} overall positive".format(
+                    recent_pos / total_recent,
+                    overall_pos / total_overall
+                )
+    out += " | {} on metacritic".format(game_details['metacritic']['score'])
 
     # last: link
     out += " | {}".format(game_data['url'])
