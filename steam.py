@@ -103,7 +103,7 @@ def _parse_html(html, fetch_price=False):
 def _parse_game(game_data, game_details, reviews):
 
     def scores(score):
-        display_score = "{:3.0%}".format(score)
+        display_score = "{:.0%}".format(score)
         if score >= 0.95:
             return color(f"Overwhelmingly Positive ({display_score})", "cyan")
         elif 0.80 <= score < 0.95:
