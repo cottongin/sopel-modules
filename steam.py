@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from io import StringIO
 from html.parser import HTMLParser
 import random
+import re
 
 from sopel_sopel_plugin_argparser import parseargs
 
@@ -21,6 +22,8 @@ SEARCH_URL = ("https://store.steampowered.com/search/suggest?term={query}"
               "&excluded_content_descriptors%5B%5D=3"
               "&excluded_content_descriptors%5B%5D=4&v=9008005")
 REVIEWS_URL = "https://store.steampowered.com/appreviewhistogram/{app_id}"
+STEAM_URL_REGEX = re.compile(r"store\.steampowered\.com\/app\/(.+)\/")
+
 
 @module.commands('steam')
 @module.example('.steam Half-Life 3')
@@ -59,6 +62,33 @@ def get_steam_info(bot, trigger):
     bot.say(reply, max_messages=2)
 
 
+@module.url(STEAM_URL_REGEX)
+def get_info(bot, trigger, match=None):
+    """
+    Get information about the latest steam URL uploaded by the channel provided.
+    """
+    if trigger.sender == "#chat":
+        return
+    match = match or trigger
+    _say_result(bot, trigger, match.group(1), include_link=False)
+
+
+def _say_result(bot, trigger, match, include_link):
+    details = _fetch_game_details(match)
+    for k,v in details.items():
+        if not v['success']:
+            LOGGER.error("error fetching details")
+            game_details = None
+        else:
+            game_details = v['data']
+
+    reviews = _fetch_game_reviews(match)
+
+    reply = _parse_game(None, game_details, reviews, include_link)
+
+    bot.say(reply, max_messages=2)
+
+
 def _fetch_search_page(query, region="US"):
     try:
         html = requests.get(SEARCH_URL.format(query=query, region=region))
@@ -67,6 +97,7 @@ def _fetch_search_page(query, region="US"):
         return soup
     except:
         return None
+
 
 def _fetch_game_details(game_id):
     try:
@@ -77,6 +108,7 @@ def _fetch_game_details(game_id):
     except:
         return None
 
+
 def _fetch_game_reviews(game_id):
     try:
         response = requests.get(REVIEWS_URL.format(app_id=game_id))
@@ -85,6 +117,7 @@ def _fetch_game_reviews(game_id):
         return response
     except:
         return None
+
 
 def _parse_html(html, fetch_price=False):
     first_result = html.find('a')
@@ -99,8 +132,9 @@ def _parse_html(html, fetch_price=False):
     if fetch_price:
         out['price'] = html.find('div', class_='match_price').text
     return out
+    
 
-def _parse_game(game_data, game_details, reviews):
+def _parse_game(game_data, game_details, reviews, include_link=True):
 
     def scores(score):
         display_score = "{:.0%}".format(score)
@@ -122,7 +156,10 @@ def _parse_game(game_data, game_details, reviews):
     out = "[Steam] "
     out += bold(game_details['name']) if game_details else bold(game_data['name'])
 
-    price = game_data.get('price')
+    try:
+        price = game_data.get('price')
+    except:
+        price = None
     if not price:
         if game_details.get('price_overview'):
             price = game_details['price_overview']['final_formatted']
@@ -195,6 +232,7 @@ def _parse_game(game_data, game_details, reviews):
         out += " | {} on metacritic".format(game_details['metacritic']['score'])
 
     # last: link
-    out += " | {}".format(game_data['url'])
+    if include_link:
+        out += " | {}".format(game_data['url'])
 
     return out
