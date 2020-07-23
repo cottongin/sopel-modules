@@ -101,6 +101,24 @@ def _parse_html(html, fetch_price=False):
     return out
 
 def _parse_game(game_data, game_details, reviews):
+
+    def scores(score):
+        display_score = "{:3.0%}".format(score)
+        if score >= 0.95:
+            return color(f"Overwhelmingly Positive ({display_score})", "cyan")
+        elif 0.80 <= score < 0.95:
+            return color(f"Very Positive ({display_score})", "light_green")
+        elif 0.70 <= score < 0.79:
+            return color(f"Mostly Positive ({display_score})", "green")
+        elif 0.40 <= score < 0.69:
+            return color(f"Mixed ({display_score})", "yellow")
+        elif 0.20 <= score < 0.39:
+            return color(f"Mostly Negative ({display_score})", "orange")
+        elif 0 <= score < 0.19:
+            return color(f"Overwhelmingly Negative ({display_score})", "red")
+        else:
+            return display_score
+
     out = "[Steam] "
     out += bold(game_details['name']) if game_details else bold(game_data['name'])
 
@@ -169,11 +187,12 @@ def _parse_game(game_data, game_details, reviews):
                     overall_neg += rev['recommendations_down']
                 total_recent = recent_neg + recent_pos
                 total_overall = overall_neg + overall_pos
-                out += " | {:3.0%} 30-day positive, {:3.0%} overall positive".format(
-                    recent_pos / total_recent,
-                    overall_pos / total_overall
+                out += " | {} recent, {} overall".format(
+                    scores(recent_pos / total_recent),
+                    scores(overall_pos / total_overall)
                 )
-    out += " | {} on metacritic".format(game_details['metacritic']['score'])
+    if game_details.get('metacritic'):
+        out += " | {} on metacritic".format(game_details['metacritic']['score'])
 
     # last: link
     out += " | {}".format(game_data['url'])
