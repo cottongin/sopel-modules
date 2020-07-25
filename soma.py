@@ -1,6 +1,7 @@
 from sopel.config.types import StaticSection, ChoiceAttribute, ValidatedAttribute
 from sopel.module import commands, example
 from sopel.formatting import *
+from sopel.tools import get_logger
 
 from urllib.parse import quote_plus
 import html
@@ -15,6 +16,8 @@ import pendulum
 ###
 # Module config/setup/shutdown
 ###
+
+LOGGER = get_logger(__name__)
 
 API_CHANNELS_URL = "https://somafm.com/channels.json"
 API_SONGS_URL = "https://somafm.com/songs/{}.json"
@@ -47,6 +50,35 @@ def shutdown(bot):
 # Commands
 ###
 
+@commands('somafmlist', 'somalist', 'somal')
+@example('.somafmlist')
+def somafm_list(bot, trigger):
+    """Lists available stations"""
+    stations = _fetch(bot, API_CHANNELS_URL)
+    tmp_replies = {}
+    replies = []
+
+    for station in stations['channels']:
+        listeners = int(station['listeners'])
+        tmp_replies[station['title']] = listeners
+
+    tmp_replies = sorted(tmp_replies.items(), key=lambda x: x[1], reverse=True)
+
+    for group in _chunker(tmp_replies, 15):
+        tmp = []
+        for station,listeners in group:
+            tmp.append(
+                "{} ({})".format(
+                    bold(station),
+                    listeners
+                )
+            )
+        replies.append(" | ".join(tmp))
+    
+    for line in replies:
+        bot.say(line)
+
+
 @commands('somafm', 'soma', 'somanp')
 @example('.somafm groove salad')
 def somafm_info(bot, trigger):
@@ -58,7 +90,8 @@ def somafm_info(bot, trigger):
     # user_input = user_input.split()
     station = None
     for channel in stations['channels']:
-        if user_input.strip().lower() == channel['title'].lower():
+        if user_input.strip().lower() == channel['title'].lower() \
+        or user_input.strip().lower() == channel['id'].lower():
             station = channel
     if not station:
         return bot.reply("I couldn't find any station by that name ({})".format(user_input))
@@ -67,21 +100,26 @@ def somafm_info(bot, trigger):
     artist = tracks["songs"][0]["artist"] 
     song = tracks["songs"][0]["title"]
     album = tracks["songs"][0]["album"]
+    station_url = "https://somafm.com/{}/".format(channel_id)
     reply = (f"[SomaFM] {bold(station['title'])} ({station['listeners']} listeners)"
              f" {station['description']} | {bold('DJ')}: {station['dj']} | {bold('Genre')}: {station['genre'].replace('|','/')}"
-             f" | {bold('Playing')}: {song} by {artist} [{album}]"
+             f" | {bold('Playing')}: {song} by {artist} [{album}] | Listen @ {station_url}"
     )
-    return bot.say(reply)
-
+    return bot.say(reply, max_messages=2)
 
 
 ###
 # Internal Functions
 ###
 
+def _chunker(seq, size):
+    return (seq[pos:pos + size] for pos in range(0, len(seq), size))
+
+
 def _fetch(bot, url, data=None, headers=None):
     try:
         response = requests.get(url, headers=headers).json()
+        LOGGER.info(url)
         return response
     except:
         return None
