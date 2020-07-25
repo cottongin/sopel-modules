@@ -87,25 +87,34 @@ def somafm_info(bot, trigger):
     if not user_input:
         return bot.reply("I need a station to lookup!")
     stations = _fetch(bot, API_CHANNELS_URL)
-    # user_input = user_input.split()
-    station = None
+    user_input = user_input.strip().lower()
+    station = []
     for channel in stations['channels']:
-        if user_input.strip().lower() == channel['title'].lower() \
-        or user_input.strip().lower() == channel['id'].lower():
-            station = channel
+        if "*" in user_input:
+            check = user_input.replace("*", "")
+            if not check:
+                return bot.reply("I can't lookup ALL channels at once nimrod.")
+            if check in channel['title'].lower() \
+            or check in channel['id'].lower():
+                station.append(channel)
+        else:
+            if user_input == channel['title'].lower() \
+            or user_input == channel['id'].lower():
+                station.append(channel)
     if not station:
-        return bot.reply("I couldn't find any station by that name ({})".format(user_input))
-    channel_id = station["id"]
-    tracks = _fetch(bot, API_SONGS_URL.format(channel_id))
-    artist = tracks["songs"][0]["artist"] 
-    song = tracks["songs"][0]["title"]
-    album = tracks["songs"][0]["album"]
-    station_url = "https://somafm.com/{}/".format(channel_id)
-    reply = (f"[SomaFM] {bold(station['title'])} ({station['listeners']} listeners)"
-             f" {station['description']} | {bold('DJ')}: {station['dj']} | {bold('Genre')}: {station['genre'].replace('|','/')}"
-             f" | {bold('Playing')}: {song} by {artist} [{album}] | Listen @ {station_url}"
-    )
-    return bot.say(reply, max_messages=2)
+        return bot.reply("I couldn't find any stations by that name ({})".format(user_input))
+    for s in station:
+        channel_id = s["id"]
+        tracks = _fetch(bot, API_SONGS_URL.format(channel_id))
+        artist = tracks["songs"][0]["artist"] 
+        song = tracks["songs"][0]["title"]
+        album = tracks["songs"][0]["album"]
+        station_url = "https://somafm.com/{}/".format(channel_id)
+        reply = (f"[SomaFM] {bold(s['title'])} ({s['listeners']} listeners)"
+                 f" {s['description']} | {bold('DJ')}: {s['dj']} | {bold('Genre')}: {s['genre'].replace('|','/')}"
+                 f" | {bold('Playing')}: {song} by {artist} [{album}] | Listen @ {station_url}"
+        )
+        bot.say(reply, max_messages=2)
 
 
 ###
