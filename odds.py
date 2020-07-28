@@ -48,6 +48,8 @@ def odds(bot, trigger):
     if len(tmp) > 1:
         # we have a team(s)
         for q in tmp[1:]:
+            if q.lower() == 'wsh' and tmp[0].lower() == 'mlb':
+                q = 'was'
             team.append(q)
     
     if league == "nhl":
@@ -58,18 +60,21 @@ def odds(bot, trigger):
 
     if not parsed:
         return bot.reply("No odds found")
-    if team:
+    if team or len(parsed) == 1:
         plucked = []
-        for tm in team:
-            for game in parsed:
-                if tm.lower() == game["home"].lower() or tm.lower() == game["away"].lower():
-                    plucked.append(game)
+        if team:
+            for tm in team:
+                for game in parsed:
+                    if tm.lower() == game["home"].lower() or tm.lower() == game["away"].lower():
+                        plucked.append(game)
+            if not plucked:
+                for game in parsed:
+                    if tm.lower() in game["home_full"].lower() or tm.lower() in game["away_full"].lower():
+                        plucked.append(game)
+        else:
+            plucked = parsed
         if not plucked:
-            for game in parsed:
-                if tm.lower() in game["home_full"].lower() or tm.lower() in game["away_full"].lower():
-                    plucked.append(game)
-        if not plucked:
-            return bot.reply("No results found for '{}'".format(team))
+            return bot.reply("No results found for '{}'".format(' '.join(team)))
         for game in plucked:
             if game.get("spread_team"):
                 if game["spread_team"] == game["home"]:
@@ -81,7 +86,7 @@ def odds(bot, trigger):
                         game["ml_team"],
                         game["ml"],
                         game["ou"],
-                        game["game_time"].in_tz("US/Eastern").format("ddd MMM DD h:mm A zz")
+                        game["game_time"].in_tz("US/Eastern").format("ddd MMM Do h:mm A zz")
                     )
                 else:
                     reply_string = "\x02{}[{}]({})\x02 @ {} (ml: {} {}) (o/u: {}) {}".format(
@@ -92,13 +97,13 @@ def odds(bot, trigger):
                         game["ml_team"],
                         game["ml"],
                         game["ou"],
-                        game["game_time"].in_tz("US/Eastern").format("ddd MMM DD h:mm A zz")
+                        game["game_time"].in_tz("US/Eastern").format("ddd MMM Do h:mm A zz")
                     )
             else:
                 reply_string = "{} @ {} (no odds yet) {}".format(
                     game["away_full"],
                     game["home_full"],
-                    game["game_time"].in_tz("US/Eastern").format("ddd MMM DD h:mm A zz")
+                    game["game_time"].in_tz("US/Eastern").format("ddd MMM Do h:mm A zz")
                 )
             bot.say(reply_string)            
     else:
