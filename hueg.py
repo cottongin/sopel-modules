@@ -14,10 +14,28 @@ def setup(bot):
 
 @module.commands('hueg', 'h')
 @module.example('.hueg BIG COLORFUL TEXT')
+@module.require_privilege(module.VOICE, 'nope')
 @module.rate(user=30, channel=10)
 def hueg_text(bot, trigger):
     """Sends BIG \x0304C\x0307O\x0308L\x0309O\x0311R\x0310F\x0312U\x0302L\x03 TEXT"""
     
+    blacklist = [
+        "dumbguy",
+        "snitch", "iamasnitch", "imasnitch",
+        "plusme",
+        "insect-", "insect--", "insect---",
+        "rat", "rat-", "rat--", "rat---", "rat----", "rat-----", "rat------",
+        "spick", "spick-", "spick--", "spick---", "spick----", "spick-----", "spick------",
+    ]
+    # print(trigger.hostmask)
+    for bl in blacklist:
+        if bl in trigger.hostmask:
+            return
+    if "snitch" in trigger.nick.lower():
+        return
+    if trigger.nick.lower() in blacklist:
+        return
+
     # check for messageut
     message = trigger.group(2)
     if not message: return bot.reply("I need something to make hueg")
