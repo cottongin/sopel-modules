@@ -6,6 +6,7 @@ from io import StringIO
 from html.parser import HTMLParser
 import random
 import re
+from pprint import pprint
 
 from sopel_sopel_plugin_argparser import parseargs
 
@@ -17,10 +18,10 @@ from sopel.tools import get_logger
 LOGGER = get_logger(__name__)
 
 API_URL = "https://store.steampowered.com/api/appdetails?appids={app_id}"
+PKG_URL = "https://store.steampowered.com/api/packagedetails?packageids={pkg_id}"
 SEARCH_URL = ("https://store.steampowered.com/search/suggest?term={query}"
               "&f=games&cc={region}&realm=1&l=english"
-              "&excluded_content_descriptors%5B%5D=3"
-              "&excluded_content_descriptors%5B%5D=4&v=9008005")
+              "&ignore_preferences=1")
 REVIEWS_URL = "https://store.steampowered.com/appreviewhistogram/{app_id}"
 STEAM_URL_REGEX = re.compile(r"store\.steampowered\.com\/app\/(.+)\/")
 
@@ -47,15 +48,17 @@ def get_steam_info(bot, trigger):
     if not game_data:
         return bot.reply("I couldn't find that game.")
 
-    details = _fetch_game_details(game_data['id'])
-    for k,v in details.items():
-        if not v['success']:
-            LOGGER.error("error fetching details")
-            game_details = None
-        else:
-            game_details = v['data']
+    details = _fetch_game_details(game_data['id'], game_data.get('pkg'))
 
-    reviews = _fetch_game_reviews(game_data['id'])
+    if not details[game_data['id']]['success']:
+        LOGGER.error("error fetching details")
+    if game_data.get('pkg'):
+        # TODO: implement
+        game_details = details[game_data['id']]['data']
+    else:
+        game_details = details[game_data['id']]['data']
+
+    reviews = _fetch_game_reviews(game_data['id'], game_data.get('pkg'))
 
     reply = _parse_game(game_data, game_details, reviews)
 
@@ -99,21 +102,31 @@ def _fetch_search_page(query, region="US"):
         return None
 
 
-def _fetch_game_details(game_id):
+def _fetch_game_details(game_id, pkg_id=None):
     try:
         response = requests.get(API_URL.format(app_id=game_id))
         LOGGER.info(response.url)
         response = response.json()
+        if pkg_id:
+            pkg_response = requests.get(PKG_URL.format(pkg_id=pkg_id))
+            pkg_response = pkg_response.json()
+            for k,v in pkg_response.items():
+                response[k] = v
         return response
     except:
         return None
 
 
-def _fetch_game_reviews(game_id):
+def _fetch_game_reviews(game_id, pkg_id=None):
     try:
         response = requests.get(REVIEWS_URL.format(app_id=game_id))
         LOGGER.info(response.url)
         response = response.json()
+        if pkg_id:
+            pkg_response = requests.get(PKG_URL.format(pkg_id=pkg_id))
+            pkg_response = pkg_response.json()
+            for k,v in pkg_response.items():
+                response[k] = v
         return response
     except:
         return None
@@ -126,16 +139,18 @@ def _parse_html(html, fetch_price=False):
     out = {}
     out['id'] = first_result.get('data-ds-appid') or first_result.get('data-ds-packageid')
     if "," in out['id']:
-        out['id'] = first_result.get('data-ds-packageid')
+        out['pkg'] = first_result.get('data-ds-packageid')
+        out['id'] = out['id'].split(',')[0]
     out['url'] = first_result.get('href').split('/?')[0]
     out['name'] = html.find('div', class_='match_name').text
     if fetch_price:
         out['price'] = html.find('div', class_='match_price').text
     return out
-    
+
 
 def _parse_game(game_data, game_details, reviews, include_link=True):
 
+    # pprint(game_details)
     def scores(score):
         display_score = "{:.0%}".format(score)
         if score >= 0.95:
@@ -155,6 +170,9 @@ def _parse_game(game_data, game_details, reviews, include_link=True):
 
     out = "[Steam] "
     out += bold(game_details['name']) if game_details else bold(game_data['name'])
+
+    if int(game_details['required_age']) >= 18:
+        out += bold(color(" [18+]", "red"))
 
     try:
         price = game_data.get('price')
@@ -207,7 +225,7 @@ def _parse_game(game_data, game_details, reviews, include_link=True):
         game_details['release_date']['date']
     )
 
-    # out += " | {}".format(game_details['short_description'])
+    # out += " | {}".format(game_details['short_description'].replace("&quot;", '"'))
     if reviews:
         if reviews.get('results'):
             results = reviews['results']
