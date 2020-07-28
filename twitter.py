@@ -7,6 +7,22 @@ import pendulum
 import tweepy
 import re
 import html
+import humanfriendly
+
+import math
+
+millnames = ['','K','M','B','T']
+
+def millify(n):
+    nf = float(n)
+    millidx = max(0,min(len(millnames)-1,
+                        int(math.floor(0 if nf == 0 else math.log10(abs(nf))/3))))
+
+    string = '{:,.1f}{}'.format(nf / 10**(3 * millidx), millnames[millidx])
+    if string.endswith(".0"):
+        return n
+    else:
+        return string
 
 # from Supybot/Limnoria utils.str
 def _normalizeWhitespace(s, removeNewline=True):
@@ -70,13 +86,19 @@ def _parse_status(status):
     created_at = pendulum.parse(str(status.created_at), strict=False)
     if status.author.verified:
         user += color("✓", "white", "blue")
+    if "theKongfuzi" in user:
+        user += color("✓", "white", "blue")
     user += " - {}".format(status.author.name)
     diff = created_at.diff_for_humans()#.in_words()
     try:
         # retweets, likes
-        tag = " | 🔃{} ❤️{}".format(
-            status.retweet_count if not rt else status.retweeted_status.retweet_count,
-            status.favorite_count if not rt else status.retweeted_status.favorite_count,
+        retweet = bold(color("🗘", colors.CYAN))
+        likes = bold(color("❤", colors.RED))
+        tag = " ({} {} / {} {})".format(
+            retweet,
+            millify(status.retweet_count if not rt else status.retweeted_status.retweet_count),
+            likes,
+            millify(status.favorite_count if not rt else status.retweeted_status.favorite_count),
         )
     except:
         tag = ""
