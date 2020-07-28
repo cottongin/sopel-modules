@@ -1,5 +1,12 @@
-import sopel.module
+from sopel import module, tools
 from sopel.formatting import color, bold
+from sopel.tools.time import (
+    format_time,
+    get_channel_timezone,
+    get_nick_timezone,
+    get_timezone,
+    validate_timezone
+)
 
 import requests
 import urllib.parse
@@ -27,16 +34,28 @@ def _normalizeWhitespace(s, removeNewline=True):
         s = s[:199] + "…"
     return s
 
-def _parse_results(data, desc=None):
+def _parse_results(data, desc=None, idx=0, tz=None):
     # parses data from API
+
+    timezones = {
+        11: "US/Pacific",
+        12: "US/Eastern",
+    }
+
     try:
-        tmp = data["results"][0]
+        tmp = data["results"][idx]
         data = requests.get(tmp['url']).json()
+        # print(url)
     except:
-        data = data["results"][0]
-    name = data['name']
+        data = data["results"][idx]
+    name = data['name'].strip()
+    if "  " in name:
+        name = name.split()
+        name = " ".join(name)
     location = "{} ({})".format(data['pad']['name'], data['pad']['location']['name']) 
-    when = pendulum.parse(data['net'], tz="UTC")
+    loc_id = data['pad']['location']['id']
+    tz = tz or timezones.get(loc_id) or "UTC"
+    when = pendulum.parse(data['net']).in_tz(tz)
     status = data['status']['name']
     if "Go" in status:
         status = color(status, "green")
@@ -69,12 +88,13 @@ def _parse_results(data, desc=None):
             pass
     lines = []
     if status != "TBD":
-        lines.append(f"\x02[Launch]\x02 {name} from {location} \x02[When]\x02 {when.format('MMM Do @ h:mm A')} UTC \x02[Status]\x02 {status}{prob}")
+        lines.append(f"\x02[Launch]\x02 {name} from {location} \x02[When]\x02 {color(when.format('MMM Do @ h:mm A zz'), 'cyan')} \x02[Status]\x02 {status}{prob}")
     else:
-        lines.append(f"\x02[Launch]\x02 {name} from {location} \x02[When]\x02 {when.format('MMM Do @ h:mm A')} UTC")
+        lines.append(f"\x02[Launch]\x02 {name} from {location} \x02[When]\x02 {color(when.format('MMM Do @ h:mm A zz'), 'cyan')}")
     if mission: lines.append("\x02[Mission]\x02 " + mission)
     if data.get('vidURLs'):
-        vid = " \x02[Watch]\x02 {}".format(', '.join(data['vidURLs']))
+        vid = " \x02[Watch]\x02 {}".format(', '.join(list(set(data['vidURLs']))))
+        # vid = " \x02[Watch]\x02 {}".format(data['vidURLs'])
     else:
         vid = ""
     if when.diff(None, False).seconds < 0:
@@ -95,12 +115,27 @@ def _parse_results(data, desc=None):
     return lines
 
 
-@sopel.module.commands('launch', 'space')
-@sopel.module.example('.launch')
+@module.commands('launch', 'space')
+@module.example('.launch')
 def launch(bot, trigger):
     """Fetches next scheduled rocket launch."""
 
-    b_url = "https://spacelaunchnow.me/api/3.3.0/launch/upcoming/?format=json&limit=1"
+    args = trigger.group(2)
+    if args: args = args.split()
+    zone = None
+    if args:
+        tmp_args = args
+        for idx,arg in enumerate(tmp_args):
+            if arg.strip().lower() == "--utc":
+                zone = "UTC"
+                args.pop(idx)
+    channel_or_nick = tools.Identifier(trigger.nick)
+    zone = zone or get_nick_timezone(bot.db, channel_or_nick)
+    if not zone:
+        channel_or_nick = tools.Identifier(trigger.sender)
+        zone = get_channel_timezone(bot.db, channel_or_nick)
+
+    b_url = "https://spacelaunchnow.me/api/3.3.0/launch/upcoming/?format=json&limit=5"
     try:
         data = requests.get(b_url).json()
     except:
@@ -109,17 +144,39 @@ def launch(bot, trigger):
     if not data.get("results"):
         return bot.reply("No results returned from the API")
 
-    parsed_data = _parse_results(data)
+    if args:
+        tmp_args = " ".join(args)
+        try:
+            parsed_data = _parse_results(data, idx=int(tmp_args.strip())-1, tz=zone)
+        except:
+            parsed_data = _parse_results(data, tz=zone)
+    else:
+        parsed_data = _parse_results(data, tz=zone)
 
     for line in parsed_data:
-        bot.say(line)
+        bot.say(line, max_messages=2)
 
-@sopel.module.commands('spacex')
-@sopel.module.example('.spacex')
+@module.commands('spacex')
+@module.example('.spacex')
 def spacex(bot, trigger):
     """Fetches next scheduled SpaceX rocket launch."""
 
-    b_url = "https://spacelaunchnow.me/api/3.3.0/launch/upcoming/?format=json&limit=1&search=spacex"
+    args = trigger.group(2)
+    if args: args = args.split()
+    zone = None
+    if args:
+        tmp_args = args
+        for idx,arg in enumerate(tmp_args):
+            if arg.strip().lower() == "--utc":
+                zone = "UTC"
+                args.pop(idx)
+    channel_or_nick = tools.Identifier(trigger.nick)
+    zone = zone or get_nick_timezone(bot.db, channel_or_nick)
+    if not zone:
+        channel_or_nick = tools.Identifier(trigger.sender)
+        zone = get_channel_timezone(bot.db, channel_or_nick)
+
+    b_url = "https://spacelaunchnow.me/api/3.3.0/launch/upcoming/?format=json&limit=3&search=spacex"
     try:
         data = requests.get(b_url).json()
     except:
@@ -128,7 +185,14 @@ def spacex(bot, trigger):
     if not data.get("results"):
         return bot.reply("No results returned from the API")
 
-    parsed_data = _parse_results(data, "SpaceX")
+    if args:
+        tmp_args = " ".join(args)
+        try:
+            parsed_data = _parse_results(data, "SpaceX", idx=int(tmp_args.strip())-1, tz=zone)
+        except:
+            parsed_data = _parse_results(data, "SpaceX", tz=zone)
+    else:
+        parsed_data = _parse_results(data, "SpaceX", tz=zone)
 
     for line in parsed_data:
-        bot.say(line)
+        bot.say(line, max_messages=2)
