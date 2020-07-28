@@ -43,6 +43,7 @@ def gas(bot, trigger):
         
     try:
         url = STATIONS_ENDPOINT.format(stations=stationIds)
+        # bot.say(url)
         prices = requests.get(url, headers=HEADERS).json()
     except:
         return bot.reply('ERROR: Something went wrong fetching fuel prices.')
@@ -50,9 +51,9 @@ def gas(bot, trigger):
     prices = prices['fuels']
     
     region = "\x02%s, %s\x02" % (region_trends['AreaName'], region_trends['State'])
-    low = "\x02{}\x02".format(color('$' + str(region_trends['TodayLow']), 'green'))
-    high = "\x02{}\x02".format(color('$' + str(region_trends['TodayHigh']), 'red'))
-    avg = "\x02{}\x02".format('$' + str(region_trends['Today']))
+    low = "\x02{}\x02".format(color('$' + "{:.2f}".format(region_trends['TodayLow']), 'green'))
+    high = "\x02{}\x02".format(color('$' + "{:.2f}".format(region_trends['TodayHigh']), 'red'))
+    avg = "\x02{}\x02".format('$' + "{:.2f}".format(region_trends['Today']))
     reply_string = "GasBuddy.com Fuel Info :: {} :: Today's Low: {} | Today's High: {} | Average Price: {}"
     reply_string = reply_string.format(
         region,
