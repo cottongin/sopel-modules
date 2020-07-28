@@ -1,6 +1,6 @@
 from __future__ import unicode_literals, absolute_import, print_function, division
 
-from sopel.module import commands, rule, priority, thread, example
+from sopel.module import commands, rule, priority, thread, example, rate
 from sopel.formatting import *
 from sopel.config.types import StaticSection, ValidatedAttribute
 from sopel.tools import Identifier
@@ -10,6 +10,7 @@ import re
 import time
 import base64
 import requests
+import random
 
 import pendulum
 from PIL import Image, ImageDraw, ImageFont
@@ -34,6 +35,126 @@ def setup(bot):
     if "spongebob_urls" not in bot.memory:
         bot.memory["spongebob_urls"] = {}
 
+def shutdown(bot):
+    for key in ['spongebob_urls']:
+        try:
+            del bot.memory[key]
+        except KeyError:
+            pass
+
+# https://i.imgur.com/DvukwQl.png
+@rate(user=5)
+@commands('katzman', 'katz', 'tk', 'km')
+@example('.katzman <nick>')
+@example('.katzman haha this is funny')
+def katz(bot, trigger):
+    """Makes a sPoNgEbOb-sTyLe TeXt (or the last message from a provided nick) meme"""
+    # verify input and config options
+    img_path = "/home/cottongin/katz.png"
+    font_path = bot.config.spongebob.font_path
+    base_image_url = "https://i.imgur.com/DvukwQl.png"
+    linx_url = bot.config.spongebob.linx_url
+    linx_pass = bot.config.spongebob.linx_pass
+    if not img_path or not base_image_url:
+        return bot.say("You need to set the path and/or URL to the base image in this module's config options.")
+    if not linx_url:
+        return bot.say("You need to set the linx upload URL in this module's config options.")
+    if not linx_pass:
+        return bot.say("You need to provide the linx upload password in this module's config options.")
+    if not font_path:
+        return bot.say("You need to proved the path to the font in this module's config options.")
+    if not trigger.group(2):
+        return bot.say(base_image_url)
+    nick_or_msg = trigger.group(2).strip()
+    if nick_or_msg == bot.nick:
+        return
+    
+    if len(nick_or_msg.split()) == 1:
+        # we have a single, presumably nick
+        # fetch latest message
+        nick = nick_or_msg
+        timestamp = bot.db.get_nick_value(nick, 'seen_timestamp')
+        if timestamp:
+            # get the relevant information
+            channel = bot.db.get_nick_value(nick, 'seen_channel')
+            message = bot.db.get_nick_value(nick, 'seen_message')
+            action  = bot.db.get_nick_value(nick, 'seen_action')
+
+            if Identifier(channel) == trigger.sender:
+                # match to channel
+                if action:
+                    msg = nick + " " + message
+                else:
+                    msg = "<{}> {}".format(nick, message)
+            else:
+                # TBD
+                msg = ""
+            # do image stuff
+            msg = _crazyCase(msg)
+            _do_image_and_url(bot, msg, img_path, font_path, linx_url, linx_pass)
+        else:
+            bot.say("Sorry, I haven't seen {} around.".format(nick))
+    else:
+        nick_or_msg = _crazyCase(nick_or_msg)
+        _do_image_and_url(bot, nick_or_msg, img_path, font_path, linx_url, linx_pass)
+
+@rate(user=5)
+@commands('mb', 'mbl')
+@example('.mb <nick>')
+@example('.mb haha this is funny')
+def mb(bot, trigger):
+    """Makes a sPoNgEbOb-sTyLe TeXt (or the last message from a provided nick) meme"""
+    # verify input and config options
+    img_path = "/home/cottongin/mb.png"
+    font_path = bot.config.spongebob.font_path
+    base_image_url = "https://img.cottongin.xyz/i/ekh3amcc.png"
+    linx_url = bot.config.spongebob.linx_url
+    linx_pass = bot.config.spongebob.linx_pass
+    if not img_path or not base_image_url:
+        return bot.say("You need to set the path and/or URL to the base image in this module's config options.")
+    if not linx_url:
+        return bot.say("You need to set the linx upload URL in this module's config options.")
+    if not linx_pass:
+        return bot.say("You need to provide the linx upload password in this module's config options.")
+    if not font_path:
+        return bot.say("You need to proved the path to the font in this module's config options.")
+    if not trigger.group(2):
+        return bot.say(base_image_url)
+    nick_or_msg = trigger.group(2).strip()
+    if nick_or_msg == bot.nick:
+        return
+    
+    if len(nick_or_msg.split()) == 1:
+        # we have a single, presumably nick
+        # fetch latest message
+        nick = nick_or_msg
+        timestamp = bot.db.get_nick_value(nick, 'seen_timestamp')
+        if timestamp:
+            # get the relevant information
+            channel = bot.db.get_nick_value(nick, 'seen_channel')
+            message = bot.db.get_nick_value(nick, 'seen_message')
+            action  = bot.db.get_nick_value(nick, 'seen_action')
+
+            if Identifier(channel) == trigger.sender:
+                # match to channel
+                if action:
+                    msg = nick + " " + message
+                else:
+                    msg = "<{}> {}".format(nick, message)
+            else:
+                # TBD
+                msg = ""
+            # do image stuff
+            msg = _crazyCase(msg)
+            _do_image_and_url(bot, msg, img_path, font_path, linx_url, linx_pass)
+        else:
+            bot.say("Sorry, I haven't seen {} around.".format(nick))
+    else:
+        nick_or_msg = _crazyCase(nick_or_msg)
+        _do_image_and_url(bot, nick_or_msg, img_path, font_path, linx_url, linx_pass)
+
+
+@rate(user=5)
 @commands('spongebob', 'sb', 'sbl')
 @example('.spongebob <nick>')
 @example('.spongebob haha this is funny')
@@ -80,10 +201,12 @@ def spongebob(bot, trigger):
                 # TBD
                 msg = ""
             # do image stuff
+            msg = _crazyCase(msg)
             _do_image_and_url(bot, msg, img_path, font_path, linx_url, linx_pass)
         else:
             bot.say("Sorry, I haven't seen {} around.".format(nick))
     else:
+        nick_or_msg = _crazyCase(nick_or_msg)
         _do_image_and_url(bot, nick_or_msg, img_path, font_path, linx_url, linx_pass)
 
 
@@ -117,8 +240,6 @@ def _do_image_and_url(bot, msg, img_path, font_path, linx_url, linx_pass):
 def _make_image(path, font_path, message):
     message = _normalizeWhitespace(message)
     message = _stripFormatting(message)
-    message = _crazyCase(message)
-    _hash = _stringToBase64(message)
     try:
         # try to split multi-word string in half without cutting a word in two
         if len(message.split()) > 1:
@@ -246,16 +367,27 @@ def _post_image(linx_url, linx_pass, image):
 
 # helper functions
 
-def _crazyCase(s):
+def _crazyCase(text):
+    # this is dumb
+    weight_upper = [False, False, True]
+    weight_lower = [True, True, False]
     temp = ''
-    s = s.lower()
-    for i,c in enumerate(s):
-        if i == 0:
-            temp += c.lower()
-        elif i % 2 == 0:
-            temp += c.lower()
+    text = text.lower()
+    for idx, char in enumerate(text):
+        # pick first character's case random 50/50
+        if idx == 0:
+            pick = random.choice([True, False])
         else:
-            temp += c.upper()   
+            # pick the next character weighted, based on the previous's case
+            if temp[-1].isupper():
+                pick = random.choice(weight_lower)
+            else:
+                pick = random.choice(weight_upper)
+        # now apply our selected case
+        if pick:
+            temp += char.lower()
+        else:
+            temp += char.upper()   
     return temp
 
 
