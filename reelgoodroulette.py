@@ -10,6 +10,7 @@ from sopel_sopel_plugin_argparser import parseargs
 from sopel import module
 from sopel.formatting import *
 from sopel.tools import get_logger
+from sopel.config.types import StaticSection, ValidatedAttribute
 
 
 LOGGER = get_logger(__name__)
@@ -43,7 +44,15 @@ MODE_MAP = {
     "s": "show",
 }
 
+class RGRSection(StaticSection):
+    smmry_api_key = ValidatedAttribute('smmry_api_key', str)
+
+def configure(config):
+    config.define_section('smmry_api_key', RGRSection)
+    config.reelgoodroulette.configure_setting('smmry_api_key', 'SMMRY api key')
+
 def setup(bot):
+    bot.config.define_section('reelgoodroulette', RGRSection)
     try:
         html_data = requests.get("https://reelgood.com/services")
         soup = BeautifulSoup(html_data.content, "html.parser")
@@ -66,11 +75,16 @@ def setup(bot):
 def get_random_show_or_movie(bot, trigger):
     """Fetch a random TV Show or Movie to enjoy"""
 
+    try:
+        api_key = bot.config.reelgoodroulette.smmry_api_key
+    except:
+        api_key = None
+
     user_input = None
     if trigger.group(2):
         user_input = parseargs(trigger.group(2).strip().lower())
 
-    response = reelgood_random(user_input)
+    response = reelgood_random(user_input, api_key)
 
     bot.reply(response[0])
     if len(response) > 1:
@@ -78,7 +92,7 @@ def get_random_show_or_movie(bot, trigger):
             bot.say(line, max_messages=2)
 
 
-def reelgood_random(user_input=None):
+def reelgood_random(user_input=None, api_key=None):
     """Gets a random TV Show or Movie from reelgood.com roulette API"""
 
     if user_input:
@@ -123,7 +137,7 @@ def reelgood_random(user_input=None):
 
     try:
         text = info_data['overview'] if info_data['overview'] else info_data['reelgood_synopsis']
-        summary = summry(strip_tags(text))
+        summary = summry(strip_tags(text), api_key)
         summary = summary["sm_api_content"]
         replies.append("\x02Summary:\x02 {}".format(summary))
     except:
@@ -164,8 +178,9 @@ def strip_tags(html):
     s.feed(html)
     return s.get_data()
 
-def summry(text):
-    api_key = "your own SMMRY API key"
+def summry(text, api_key=None):
+    if not api_key:
+        return text
     api_endpoint = "https://api.smmry.com"
 
     data = {
