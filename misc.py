@@ -26,7 +26,7 @@ def source(bot, trigger):
     return bot.say(f"You can find the source to my custom modules here: {url}")
 
 
-@module.commands('pick', 'choose', 'p', 'c')
+@module.commands('pick', 'choose', 'p', 'ch')
 @module.example('.pick eat, don\'t eat')
 def pick(bot, trigger):
     """Returns a random choice from user-provided comma separated list"""
