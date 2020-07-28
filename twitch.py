@@ -36,7 +36,7 @@ twitchclipsregex = re.compile('.*https?:\/\/clips\.twitch.tv\/(.*?)\/?(?:(?=[\s]
 
 def setup(bot):
     bot.config.define_section('twitch', TwitchSection)
-    if not bot.memory.contains('url_callbacks'):
+    if 'url_callbacks' not in bot.memory:
         bot.memory['url_callbacks'] = SopelMemory()
     bot.memory['url_callbacks'][twitchregex] = twitchirc
     bot.memory['url_callbacks'][mixerregex] = mixerirc
