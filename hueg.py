@@ -11,6 +11,11 @@ def configure(config):
 def setup(bot):
     pass
 
+# sigh, this really has to be a thing?
+WORDS_BLACKLIST = [
+    "nigger", "n1gger", "n1gg3r", "nigg3r"
+]
+
 
 @module.commands('hueg', 'h')
 @module.example('.hueg BIG COLORFUL TEXT')
@@ -39,6 +44,11 @@ def hueg_text(bot, trigger):
     # check for messageut
     message = trigger.group(2)
     if not message: return bot.reply("I need something to make hueg")
+
+    check = message.strip().lower()
+    check = "".join(check.split())
+    if check in WORDS_BLACKLIST:
+        return bot.reply(":|")
 
     # parse messageut & assign colors
     message = _strip(message)
