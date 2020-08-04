@@ -21,6 +21,8 @@ from sopel.tools.time import (
 
 # import shlex
 
+LOGGER = tools.get_logger("mma")
+
 schedule_url = "https://www.espn.com/mma/schedule/_/year/2020?_xhr=pageContent"
 event_url = ("https://site.web.api.espn.com/apis/common/v3/sports/mma/ufc"
              "/fightcenter/{event_id}?region=us&lang=en&contentorigin=espn"
@@ -73,7 +75,10 @@ def fighter(bot, trigger):
         return bot.reply("You need to provide me someone to look for.")
 
     options = parseargs(trigger.group(2))
+    LOGGER.info(options)
     if options:
+        if options.get('extra_text'):
+            query = quote_plus(options.get('extra_text'))
         pass
     else:
         query = quote_plus(trigger.group(2).strip())
@@ -81,7 +86,9 @@ def fighter(bot, trigger):
     f_data = None
     t_data = None
     try:
-        data = requests.get(fighter_search_url.format(query=query)).json()
+        data = requests.get(fighter_search_url.format(query=query))
+        LOGGER.info(data.url)
+        data = data.json()
         if data.get('items'):
             t_data = data['items'][0]
     except:
