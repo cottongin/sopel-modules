@@ -23,7 +23,7 @@ SEARCH_URL = ("https://store.steampowered.com/search/suggest?term={query}"
               "&f=games&cc={region}&realm=1&l=english"
               "&ignore_preferences=1")
 REVIEWS_URL = "https://store.steampowered.com/appreviewhistogram/{app_id}"
-STEAM_URL_REGEX = re.compile(r"store\.steampowered\.com\/app\/(.+)\/")
+STEAM_URL_REGEX = re.compile(r"store\.steampowered\.com\/app\/(.+\d)\/")
 
 
 @module.commands('steam')
