@@ -592,14 +592,17 @@ def fight(bot, trigger):
                 )
                 left_strings.append(left_string)
                 right_strings.append(right_string)
-                # decisions.append(
-                #     " | {} - {} ({}) [R{}, {}]".format(
-                #         fight['status']['type']['shortDetail'],
-                #         fight['status']['result']['shortDisplayName'],
-                #         fight['judgesScores'] if fight.get('judgesScores') else fight['status']['result']['description'],
-                #         fight['status']['period'], fight['status']['displayClock']
-                #     )
-                # )
+                try:
+                    decisions.append(
+                        " | {} - {} ({}) [R{}, {}]".format(
+                            fight['status']['type']['shortDetail'],
+                            fight['status']['result']['shortDisplayName'],
+                            fight['judgesScores'] if fight.get('judgesScores') else fight['status']['result']['description'],
+                            fight['status']['period'], fight['status']['displayClock']
+                        )
+                    )
+                except:
+                    pass
                 divisions.append(
                     " | {}".format(
                         fight['note']
@@ -626,9 +629,15 @@ def fight(bot, trigger):
                 ppad = 6
             else:
                 ppad = 2
+
+            try:
+                dec = decisions[idx]
+            except:
+                dec = ""
+
             strings.append(
                 "{:{l_padding}} vs {:{r_padding}}{}{}".format(
-                    left_strings[idx], right_strings[idx], decisions[idx] if decisions else "", divisions[idx] if divisions else "",
+                    left_strings[idx], right_strings[idx], dec, divisions[idx] if divisions else "",
                     l_padding=l_padding if "\x02" in left_strings[idx] else l_padding-ppad,
                     r_padding=r_padding if "\x02" in right_strings[idx] else r_padding-ppad
                 )
