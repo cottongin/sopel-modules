@@ -84,10 +84,10 @@ def nhl_player_info(bot, trigger):
     height = player_info['height']
     position = player_info['primaryPosition']['name']
     if "goalie" in position.lower():
-        draft_url_pos = "goalies"
+        draft_url_pos = "goalie"
         handed_phrase = "catches"
     else:
-        draft_url_pos = "skaters"
+        draft_url_pos = "skater"
         handed_phrase = "shoots"
     age = str(player_info['currentAge'])
     captain = " | Captain" if player_info['captain'] else ""
@@ -95,17 +95,25 @@ def nhl_player_info(bot, trigger):
     rookie = " | Rookie" if player_info['rookie'] else ""
     active = f" | {bold('Active')}" if player_info['active'] else ""
 
-    draft_info_url = "http://www.nhl.com/stats/rest/{}?reportType=basic&reportName=bios&cayenneExp=playerId={}".format(draft_url_pos, player_info['id'])
+    # draft_info_url = "https://api.nhle.com/stats/rest/en/{}?reportType=basic&reportName=bios&cayenneExp=playerId={}".format(draft_url_pos, player_info['id'])
     # bot.say(draft_info_url)
+    draft_info_url = (
+        "https://api.nhle.com/stats/rest/en/{}/bios?isAggregate=false"
+        "&isGame=false&sort=%5B%7B%22property%22:%22lastName%22,%22direction"
+        "%22:%22ASC_CI%22%7D,%7B%22property%22:%22skaterFullName%22,"
+        "%22direction%22:%22ASC_CI%22%7D%5D&start=0&limit=1"
+        "&factCayenneExp=gamesPlayed%3E=1&cayenneExp=gameTypeId=3"
+        "%20and%20playerId%20=%20{}".format(draft_url_pos, player_info['id'])
+    )
     try:
         draft_info = _fetch(bot, draft_info_url)
     except:
-        draft_info = None
+        draft_info = {}
 
-    if draft_info['data']:
-        draft_year = draft_info['data'][0]['playerDraftYear']
-        draft_round = draft_info['data'][0]['playerDraftRoundNo']
-        draft_overall = draft_info['data'][0]['playerDraftOverallPickNo']
+    if draft_info.get('data'):
+        draft_year = draft_info['data'][0]['draftYear']
+        draft_round = draft_info['data'][0]['draftRound']
+        draft_overall = draft_info['data'][0]['draftOverall']
         if draft_year:
             draft_full_url = "https://statsapi.web.nhl.com/api/v1/draft/{}".format(draft_year)
             draft_full_info = _fetch(bot, draft_full_url)
@@ -146,7 +154,7 @@ def _fetch(bot, url, data=None, headers=None):
         response = requests.get(url, headers=headers).json()
         return response
     except:
-        return None
+        return {}
 
 
 def _shorten(bot, long_url):
