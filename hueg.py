@@ -49,6 +49,9 @@ def hueg_text(bot, trigger):
     check = "".join(check.split())
     if check in WORDS_BLACKLIST:
         return bot.reply(":|")
+    for word in WORDS_BLACKLIST:
+        if word in check:
+            return bot.reply(":|")
 
     # parse messageut & assign colors
     message = _strip(message)
