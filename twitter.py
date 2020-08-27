@@ -73,7 +73,7 @@ def _twitter_auth(bot):
     api = tweepy.API(auth)
     return api
 
-def _parse_status(status):
+def _parse_status(status, include_link=False):
     try:
         tweet_text = color("[RT @{}] ".format(status.retweeted_status.author.screen_name), "red") + status.retweeted_status.full_text
         rt = True
@@ -103,6 +103,8 @@ def _parse_status(status):
     except:
         tag = ""
     reply_string = f"\x02(@{user})\x02 {tweet_text} | {diff}{tag}"
+    if include_link:
+        reply_string += f" | https://twitter.com/{status.user.screen_name}/status/{status.id_str}"
     return reply_string
 
 @module.commands('twitter', 'tw')
@@ -140,6 +142,7 @@ def tsearch(bot, trigger):
     result_type = "mixed"
     check_input = user_input.split()
     tmp = user_input.split()
+    include_link = False
     for arg in tmp:
         if "--" in arg:
             check_input.remove(arg)
@@ -150,13 +153,15 @@ def tsearch(bot, trigger):
                 result_type = "popular"
             elif arg == "noretweets" or arg == "no-retweets":
                 check_input.append("-filter:retweets")
+            elif arg == "link" or arg == "include-link":
+                include_link = True
     user_input = " ".join(check_input)
     print(f'query={user_input}', f'result_type={result_type}')
 
     data = api.search(q=f"{user_input}", count=3, result_type=result_type, lang="en", tweet_mode="extended")
     if data:
         for status in data:
-            bot.say(_parse_status(status))
+            bot.say(_parse_status(status, include_link=include_link))
     else:
         return bot.reply("I couldn't find any results for that query")
 
