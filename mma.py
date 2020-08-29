@@ -304,7 +304,9 @@ def fight(bot, trigger):
     
 
     event_blacklist = [
-        "401210113"
+        "401210113",
+        "401223006",
+        "401210554"
     ]
     now = pendulum.now()
     inp_fut = []
@@ -403,213 +405,217 @@ def fight(bot, trigger):
         divisions = []
         strings.append(f"\x02{event_name}\x02 - {event_time.format('MMM Do h:mm A zz')}{event_loc}")
 
-        if pv_fight or data['cards'][card_type]['competitions'][0]['status']['type']['completed']:
-            # fight over
-            fights = data['cards'][card_type]['competitions'][::-1]
-            for fight in fights:
-                left_fighter = {}
-                right_fighter = {}
-                flg_code = None
-                for fighter in fight['competitors']:
-                    if fighter['order'] == 1:
-                        left_fighter['name'] = bold(fighter['athlete']['displayName']) if fighter['winner'] else fighter['athlete']['displayName']
-                        left_fighter['winner_or_loser'] = color("W", 'green') if fighter['winner'] else color("L", 'red')
-                        flg_code = None
-                        if "TBA" not in left_fighter['name']:
-                            try:
-                                if len(fighter['athlete']['flag']['alt']) > 3:
-                                    for country in countries:
-                                        if fighter['athlete']['flag']['alt'] == country['name']:
-                                            flg_code = country['alpha-2']
-                                            break
-                                else:
-                                    flg_code = fighter['athlete']['flag']['alt'][:2]
-                                if not flg_code:
-                                    flg_code = fighter['athlete']['flag']['alt'][:2]
-
-                                try:
-                                    if flg_code.lower() == "en":
-                                        left_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
-                                    else:
-                                        left_fighter['flag'] = "{}".format(flag.flag(flg_code))
-                                except:
-                                    if flg_code.lower() == "en":
-                                        left_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
-                                    else:
-                                        left_fighter['flag'] = fighter['athlete']['flag']['alt']
-                            except:
-                                left_fighter['flag'] = ""
-                        else:
-                            left_fighter['flag'] = "🏳️"
-                        left_fighter['record'] = fighter.get('displayRecord', "-")
-
-                    else:
-                        right_fighter['name'] = bold(fighter['athlete']['displayName']) if fighter['winner'] else fighter['athlete']['displayName']
-                        right_fighter['winner_or_loser'] = color("W", 'green') if fighter['winner'] else color("L", 'red')
-                        flg_code = None
-                        if "TBA" not in right_fighter['name']:
-                            try:
-                                if len(fighter['athlete']['flag']['alt']) > 3:
-                                    for country in countries:
-                                        if fighter['athlete']['flag']['alt'] == country['name']:
-                                            flg_code = country['alpha-2']
-                                            break
-                                else:
-                                    flg_code = fighter['athlete']['flag']['alt'][:2]
-                                if not flg_code:
-                                    flg_code = fighter['athlete']['flag']['alt'][:2]
-
-                                try:
-                                    if flg_code.lower() == "en":
-                                        right_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
-                                    else:
-                                        right_fighter['flag'] = "{}".format(flag.flag(flg_code))
-                                except:
-                                    if flg_code.lower() == "en":
-                                        right_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
-                                    else:
-                                        right_fighter['flag'] = fighter['athlete']['flag']['alt']
-                            except:
-                                right_fighter['flag'] = ""
-                        else:
-                            right_fighter['flag'] = "🏳️"
-                        right_fighter['record'] = fighter.get('displayRecord', "-")
-                left_string = "[{}] {} {} ({})".format(
-                    left_fighter['winner_or_loser'],
-                    left_fighter['name'],
-                    left_fighter['flag'],
-                    left_fighter['record'],
-                )
-                right_string = "[{}] {} {} ({})".format(
-                    right_fighter['winner_or_loser'],
-                    right_fighter['name'],
-                    right_fighter['flag'],
-                    right_fighter['record'],
-                )
-                left_strings.append(left_string)
-                right_strings.append(right_string)
-                decisions.append(
-                    " | {} - {} ({}) [R{}, {}]".format(
-                        fight['status']['type']['shortDetail'],
-                        fight['status']['result']['shortDisplayName'],
-                        fight['judgesScores'] if fight.get('judgesScores') else fight['status']['result']['description'],
-                        fight['status']['period'], fight['status']['displayClock']
-                    )
-                )
-                divisions.append(
-                    " | {}".format(
-                        fight['note']
-                    ) if fight.get('note') else ""
-                )
-        else:
-            # fight not over
-            fights = data['cards'][card_type]['competitions'][::-1]
-            for fight in fights:
-                left_fighter = {}
-                right_fighter = {}
-                flg_code = None
-                for fighter in fight['competitors']:
-                    if fighter['order'] == 1:
-                        left_fighter['name'] = bold(fighter['athlete']['displayName']) if fighter['winner'] else fighter['athlete']['displayName']
-                        if fight['status']['type']['completed']:
+        if data.get('cards'):
+            if pv_fight or data['cards'][card_type]['competitions'][0]['status']['type']['completed']:
+                # fight over
+                fights = data['cards'][card_type]['competitions'][::-1]
+                for fight in fights:
+                    left_fighter = {}
+                    right_fighter = {}
+                    flg_code = None
+                    for fighter in fight['competitors']:
+                        if fighter['order'] == 1:
+                            left_fighter['name'] = bold(fighter['athlete']['displayName']) if fighter['winner'] else fighter['athlete']['displayName']
                             left_fighter['winner_or_loser'] = color("W", 'green') if fighter['winner'] else color("L", 'red')
-                        else:
-                            left_fighter['winner_or_loser'] = ""
-                        flg_code = None
-                        if "TBA" not in left_fighter['name']:
-                            try:
-                                if len(fighter['athlete']['flag']['alt']) > 3:
-                                    for country in countries:
-                                        if fighter['athlete']['flag']['alt'] == country['name']:
-                                            flg_code = country['alpha-2']
-                                            break
-                                else:
-                                    flg_code = fighter['athlete']['flag']['alt'][:2]
-                                if not flg_code:
-                                    flg_code = fighter['athlete']['flag']['alt'][:2]
-
+                            flg_code = None
+                            if "TBA" not in left_fighter['name']:
                                 try:
-                                    if flg_code.lower() == "en":
-                                        left_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
+                                    if len(fighter['athlete']['flag']['alt']) > 3:
+                                        for country in countries:
+                                            if fighter['athlete']['flag']['alt'] == country['name']:
+                                                flg_code = country['alpha-2']
+                                                break
                                     else:
-                                        left_fighter['flag'] = "{}".format(flag.flag(flg_code))
-                                except:
-                                    if flg_code.lower() == "en":
-                                        left_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
-                                    else:
-                                        left_fighter['flag'] = fighter['athlete']['flag']['alt']
-                            except:
-                                left_fighter['flag'] = ""
-                        else:
-                            left_fighter['flag'] = "🏳️"
-                        left_fighter['record'] = fighter.get('displayRecord', "-")
+                                        flg_code = fighter['athlete']['flag']['alt'][:2]
+                                    if not flg_code:
+                                        flg_code = fighter['athlete']['flag']['alt'][:2]
 
-                    else:
-                        right_fighter['name'] = bold(fighter['athlete']['displayName']) if fighter['winner'] else fighter['athlete']['displayName']
-                        if fight['status']['type']['completed']:
+                                    try:
+                                        if flg_code.lower() == "en":
+                                            left_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
+                                        else:
+                                            left_fighter['flag'] = "{}".format(flag.flag(flg_code))
+                                    except:
+                                        if flg_code.lower() == "en":
+                                            left_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
+                                        else:
+                                            left_fighter['flag'] = fighter['athlete']['flag']['alt']
+                                except:
+                                    left_fighter['flag'] = ""
+                            else:
+                                left_fighter['flag'] = "🏳️"
+                            left_fighter['record'] = fighter.get('displayRecord', "-")
+
+                        else:
+                            right_fighter['name'] = bold(fighter['athlete']['displayName']) if fighter['winner'] else fighter['athlete']['displayName']
                             right_fighter['winner_or_loser'] = color("W", 'green') if fighter['winner'] else color("L", 'red')
-                        else:
-                            right_fighter['winner_or_loser'] = ""
-                        flg_code = None
-                        if "TBA" not in right_fighter['name']:
-                            try:
-                                if len(fighter['athlete']['flag']['alt']) > 3:
-                                    for country in countries:
-                                        if fighter['athlete']['flag']['alt'] == country['name']:
-                                            flg_code = country['alpha-2']
-                                            break
-                                else:
-                                    flg_code = fighter['athlete']['flag']['alt'][:2]
-                                if not flg_code:
-                                    flg_code = fighter['athlete']['flag']['alt'][:2]
-
+                            flg_code = None
+                            if "TBA" not in right_fighter['name']:
                                 try:
-                                    if flg_code.lower() == "en":
-                                        right_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
+                                    if len(fighter['athlete']['flag']['alt']) > 3:
+                                        for country in countries:
+                                            if fighter['athlete']['flag']['alt'] == country['name']:
+                                                flg_code = country['alpha-2']
+                                                break
                                     else:
-                                        right_fighter['flag'] = "{}".format(flag.flag(flg_code))
+                                        flg_code = fighter['athlete']['flag']['alt'][:2]
+                                    if not flg_code:
+                                        flg_code = fighter['athlete']['flag']['alt'][:2]
+
+                                    try:
+                                        if flg_code.lower() == "en":
+                                            right_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
+                                        else:
+                                            right_fighter['flag'] = "{}".format(flag.flag(flg_code))
+                                    except:
+                                        if flg_code.lower() == "en":
+                                            right_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
+                                        else:
+                                            right_fighter['flag'] = fighter['athlete']['flag']['alt']
                                 except:
-                                    if flg_code.lower() == "en":
-                                        right_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
-                                    else:
-                                        right_fighter['flag'] = fighter['athlete']['flag']['alt']
-                            except:
-                                right_fighter['flag'] = ""
-                        else:
-                            right_fighter['flag'] = "🏳️"
-                        right_fighter['record'] = fighter.get('displayRecord', "-") 
-                left_string = "{}{} {} ({})".format(
-                    "{}".format('[' + left_fighter['winner_or_loser'] + '] ' if left_fighter['winner_or_loser'] else ''),
-                    left_fighter['name'],
-                    left_fighter['flag'],
-                    left_fighter['record'],
-                )
-                right_string = "{}{} {} ({})".format(
-                    "{}".format('[' + right_fighter['winner_or_loser'] + '] ' if right_fighter['winner_or_loser'] else ''),
-                    right_fighter['name'],
-                    right_fighter['flag'],
-                    right_fighter['record'],
-                )
-                left_strings.append(left_string)
-                right_strings.append(right_string)
-                try:
-                    decisions.append(
-                        " | {} - {} ({}) [R{}, {}]".format(
-                            fight['status']['type']['shortDetail'],
-                            fight['status']['result']['shortDisplayName'],
-                            fight['judgesScores'] if fight.get('judgesScores') else fight['status']['result']['description'],
-                            fight['status']['period'], fight['status']['displayClock']
-                        )
+                                    right_fighter['flag'] = ""
+                            else:
+                                right_fighter['flag'] = "🏳️"
+                            right_fighter['record'] = fighter.get('displayRecord', "-")
+                    left_string = "[{}] {} {} ({})".format(
+                        left_fighter['winner_or_loser'],
+                        left_fighter['name'],
+                        left_fighter['flag'],
+                        left_fighter['record'],
                     )
-                except:
-                    pass
-                divisions.append(
-                    " | {}".format(
-                        fight['note']
-                    ) if fight.get('note') else ""
-                )
-        # except:
-        #     return bot.say("Couldn't find info on that card")
+                    right_string = "[{}] {} {} ({})".format(
+                        right_fighter['winner_or_loser'],
+                        right_fighter['name'],
+                        right_fighter['flag'],
+                        right_fighter['record'],
+                    )
+                    left_strings.append(left_string)
+                    right_strings.append(right_string)
+                    try:
+                        decisions.append(
+                            " | {} - {} ({}) [R{}, {}]".format(
+                                fight['status']['type']['shortDetail'],
+                                fight['status']['result']['shortDisplayName'],
+                                fight['judgesScores'] if fight.get('judgesScores') else fight['status']['result']['description'],
+                                fight['status']['period'], fight['status']['displayClock']
+                            )
+                        )
+                    except:
+                        pass
+                    divisions.append(
+                        " | {}".format(
+                            fight['note']
+                        ) if fight.get('note') else ""
+                    )
+            else:
+                # fight not over
+                fights = data['cards'][card_type]['competitions'][::-1]
+                for fight in fights:
+                    left_fighter = {}
+                    right_fighter = {}
+                    flg_code = None
+                    for fighter in fight['competitors']:
+                        if fighter['order'] == 1:
+                            left_fighter['name'] = bold(fighter['athlete']['displayName']) if fighter['winner'] else fighter['athlete']['displayName']
+                            if fight['status']['type']['completed']:
+                                left_fighter['winner_or_loser'] = color("W", 'green') if fighter['winner'] else color("L", 'red')
+                            else:
+                                left_fighter['winner_or_loser'] = ""
+                            flg_code = None
+                            if "TBA" not in left_fighter['name']:
+                                try:
+                                    if len(fighter['athlete']['flag']['alt']) > 3:
+                                        for country in countries:
+                                            if fighter['athlete']['flag']['alt'] == country['name']:
+                                                flg_code = country['alpha-2']
+                                                break
+                                    else:
+                                        flg_code = fighter['athlete']['flag']['alt'][:2]
+                                    if not flg_code:
+                                        flg_code = fighter['athlete']['flag']['alt'][:2]
+
+                                    try:
+                                        if flg_code.lower() == "en":
+                                            left_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
+                                        else:
+                                            left_fighter['flag'] = "{}".format(flag.flag(flg_code))
+                                    except:
+                                        if flg_code.lower() == "en":
+                                            left_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
+                                        else:
+                                            left_fighter['flag'] = fighter['athlete']['flag']['alt']
+                                except:
+                                    left_fighter['flag'] = ""
+                            else:
+                                left_fighter['flag'] = "🏳️"
+                            left_fighter['record'] = fighter.get('displayRecord', "-")
+
+                        else:
+                            right_fighter['name'] = bold(fighter['athlete']['displayName']) if fighter['winner'] else fighter['athlete']['displayName']
+                            if fight['status']['type']['completed']:
+                                right_fighter['winner_or_loser'] = color("W", 'green') if fighter['winner'] else color("L", 'red')
+                            else:
+                                right_fighter['winner_or_loser'] = ""
+                            flg_code = None
+                            if "TBA" not in right_fighter['name']:
+                                try:
+                                    if len(fighter['athlete']['flag']['alt']) > 3:
+                                        for country in countries:
+                                            if fighter['athlete']['flag']['alt'] == country['name']:
+                                                flg_code = country['alpha-2']
+                                                break
+                                    else:
+                                        flg_code = fighter['athlete']['flag']['alt'][:2]
+                                    if not flg_code:
+                                        flg_code = fighter['athlete']['flag']['alt'][:2]
+
+                                    try:
+                                        if flg_code.lower() == "en":
+                                            right_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
+                                        else:
+                                            right_fighter['flag'] = "{}".format(flag.flag(flg_code))
+                                    except:
+                                        if flg_code.lower() == "en":
+                                            right_fighter['flag'] = "\x02🏴󠁧󠁢󠁥󠁮󠁧󠁿\x02"
+                                        else:
+                                            right_fighter['flag'] = fighter['athlete']['flag']['alt']
+                                except:
+                                    right_fighter['flag'] = ""
+                            else:
+                                right_fighter['flag'] = "🏳️"
+                            right_fighter['record'] = fighter.get('displayRecord', "-") 
+                    left_string = "{}{} {} ({})".format(
+                        "{}".format('[' + left_fighter['winner_or_loser'] + '] ' if left_fighter['winner_or_loser'] else ''),
+                        left_fighter['name'],
+                        left_fighter['flag'],
+                        left_fighter['record'],
+                    )
+                    right_string = "{}{} {} ({})".format(
+                        "{}".format('[' + right_fighter['winner_or_loser'] + '] ' if right_fighter['winner_or_loser'] else ''),
+                        right_fighter['name'],
+                        right_fighter['flag'],
+                        right_fighter['record'],
+                    )
+                    left_strings.append(left_string)
+                    right_strings.append(right_string)
+                    try:
+                        decisions.append(
+                            " | {} - {} ({}) [R{}, {}]".format(
+                                fight['status']['type']['shortDetail'],
+                                fight['status']['result']['shortDisplayName'],
+                                fight['judgesScores'] if fight.get('judgesScores') else fight['status']['result']['description'],
+                                fight['status']['period'], fight['status']['displayClock']
+                            )
+                        )
+                    except:
+                        pass
+                    divisions.append(
+                        " | {}".format(
+                            fight['note']
+                        ) if fight.get('note') else ""
+                    )
+            # except:
+            #     return bot.say("Couldn't find info on that card")
 
         replies = []
         l_padding = 0
