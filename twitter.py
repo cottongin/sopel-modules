@@ -156,7 +156,7 @@ def tsearch(bot, trigger):
             elif arg == "link" or arg == "include-link":
                 include_link = True
     user_input = " ".join(check_input)
-    print(f'query={user_input}', f'result_type={result_type}')
+    # print(f'query={user_input}', f'result_type={result_type}') #TODO LOGGER this
 
     data = api.search(q=f"{user_input}", count=3, result_type=result_type, lang="en", tweet_mode="extended")
     if data:
