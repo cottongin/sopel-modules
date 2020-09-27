@@ -278,7 +278,11 @@ def fight(bot, trigger):
         return bot.say("I couldn't fetch the schedule")
 
     pv_fight = options.get('--prev') or False
-    card_type = 'main' if not options.get('--prelim') else options.get('--prelim')
+    if any(key.startswith('--prelim') for key in options):
+        card_type = options.get('--prelim') or options.get('--prelims')
+    else:
+        card_type = 'main'
+    # card_type = 'main' if not options.get('--prelim') else options.get('--prelim')
     if card_type == 'early':
         card_type = 'prelims2'
     elif card_type == True:
