@@ -42,13 +42,14 @@ def urbandictionary(bot, trigger):
     if not user_input:
         api = "https://api.urbandictionary.com/v0/random"
         worst = False
-    else:
-        api = api.format(user_input)
 
     # sanitize and fetch input
-    user_input = urllib.parse.quote_plus(user_input)
+    user_input = urllib.parse.quote_plus(user_input.lower())
+    api = api.format(user_input)
     try:
-        results = requests.get(api).json()
+        results = requests.get(api)
+        # print(results.url)
+        results = results.json()
     except:
         return bot.reply("I couldn't retreive anything from Urban Dictionary")
 
