@@ -379,10 +379,16 @@ def _crazyCase(text):
             pick = random.choice([True, False])
         else:
             # pick the next character weighted, based on the previous's case
-            if temp[-1].isupper():
-                pick = random.choice(weight_lower)
+            # and also check for too many repeats
+            if temp[-3:].isupper():
+                pick = True
+            elif temp[-3:].islower():
+                pick = False
             else:
-                pick = random.choice(weight_upper)
+                if temp[-1].isupper():
+                    pick = random.choice(weight_lower)
+                else:
+                    pick = random.choice(weight_upper)
         # now apply our selected case
         if pick:
             temp += char.lower()
