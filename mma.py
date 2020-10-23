@@ -310,7 +310,8 @@ def fight(bot, trigger):
     event_blacklist = [
         "401210113",
         "401223006",
-        "401210554"
+        "401210554",
+        "401223027"
     ]
     now = pendulum.now()
     inp_fut = []
