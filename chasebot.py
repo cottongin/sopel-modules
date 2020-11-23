@@ -43,6 +43,10 @@ FOLLOW_LIST = [
 APP_PREFIX = "\x02[ChaseApp]\x02 "
 BOT_PREFIX = "\x02[ChaseBot]\x02 "
 
+APP_STORE_LINKS = [
+    {"os": "Android", "url": "https://play.google.com/store/apps/details?id=com.carverauto.chaseapp"}
+]
+
 CHASES = {}
 
 
@@ -270,6 +274,16 @@ def twitter_thread(bot):
     firstStart = True
 
 
+@plugin.command('applinks', 'applink', 'app')
+@plugin.example('.applinks')
+@plugin.output_prefix(APP_PREFIX)
+def send_links(bot, trigger):
+    """Send links to the ChaseApp store pages"""
+    return bot.say("Download ChaseApp here: {}".format(
+        " | ".join("{}: {}".format(link['os'], link['url']) for link in APP_STORE_LINKS)
+    ))
+
+
 @plugin.command('listchases', 'list', 'lc', 'chases')
 @plugin.example('.listchases')
 @plugin.output_prefix(APP_PREFIX)
@@ -277,12 +291,14 @@ def list_chases(bot, trigger):
     """List active chases"""
 
     show_id = False
+    list_live = False
 
     index = -1
     if trigger.group(2):
         args = parseargs(trigger.group(2))
         index = int(args.get('--index', 1)) * -1
         show_id = args.get('--showid')
+        list_live = args.get('--showlive')
 
     headers = {
         'User-Agent': 'chasebot@efnet ({}) v1.0'.format(trigger.nick),
@@ -293,29 +309,36 @@ def list_chases(bot, trigger):
 
     data = requests.get(api_endpoint, headers=headers).json()
     sorted_chases = sorted(data, key=lambda i: i['CreatedAt'])
-    last_chase = sorted_chases[index]
+    if list_live:
+        sorted_chases = [chase for chase in sorted_chases if chase.get('Live')]
+    else:
+        sorted_chases = [sorted_chases[index]]
 
-    bot.say("({recent}{date}) \x02{name} - {desc}\x02 | {status} | {votes} votes".format(
-        recent="Most Recent - " if index == -1 else "",
-        name=last_chase['Name'],
-        desc=last_chase['Desc'],
-        date=pendulum.parse(last_chase['CreatedAt']).in_tz('US/Pacific').format("MM/DD/YYYY h:mm A zz"),
-        votes=last_chase['Votes'],
-        status="\x02\x0309LIVE\x03\x02" if last_chase['Live'] else "\x0304Inactive\x03",
-    ))
+    if not sorted_chases:
+        return bot.say("No chases found :(")
 
-    if last_chase['URL']:
-        links = []
-        links.append("(Primary) {}".format(last_chase['URL']))
-        if last_chase['URLs']:
-            for thing in last_chase['URLs']:
-                if thing.get('Network') and thing.get('URL'):
-                    links.append("({}) {}".format(thing.get('Network'), thing.get('URL')))
-        for link in links:
-            bot.say(link)
+    for chase in sorted_chases:
+        bot.say("({recent}{date}) \x02{name} - {desc}\x02 | {status} | {votes} votes".format(
+            recent="\x1FMost Recent\x0F - " if chase == sorted_chases[-1] else "",
+            name=chase['Name'],
+            desc=chase['Desc'],
+            date=pendulum.parse(chase['CreatedAt']).in_tz('US/Pacific').format("MM/DD/YYYY h:mm A zz"),
+            votes=chase['Votes'],
+            status="\x02\x0309LIVE\x03\x02" if chase['Live'] else "\x0304Inactive\x03",
+        ))
 
-    if show_id:
-        bot.say(f"(ID) {last_chase['ID']}")
+        if chase['URL']:
+            links = []
+            links.append("(Primary) {}".format(chase['URL']))
+            if chase['URLs']:
+                for thing in chase['URLs']:
+                    if thing.get('Network') and thing.get('URL'):
+                        links.append("({}) {}".format(thing.get('Network'), thing.get('URL')))
+            for link in links:
+                bot.say(link)
+
+        if show_id:
+            bot.say(f"(ID) {chase['ID']}")
 
 
 @plugin.command('updatechase', 'update', 'uc')
