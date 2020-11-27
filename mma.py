@@ -305,14 +305,16 @@ def fight(bot, trigger):
 
     if not zone:
         zone = "US/Eastern"
-    
+
 
     event_blacklist = [
         "401210113",
         "401223006",
         "401210554",
-        "401223027"
+        "401223027",
+        "401223444"
     ]
+
     now = pendulum.now()
     inp_fut = []
     previous = []
