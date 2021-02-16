@@ -93,7 +93,8 @@ def _parse_results(data, desc=None, idx=0, tz=None):
         lines.append(f"\x02[Launch]\x02 {name} from {location} \x02[When]\x02 {color(when.format('MMM Do @ h:mm A zz'), 'cyan')}")
     if mission: lines.append("\x02[Mission]\x02 " + mission)
     if data.get('vidURLs'):
-        vid = " \x02[Watch]\x02 {}".format(', '.join(list(set(data['vidURLs']))))
+        # print(data['vidURLs'])
+        vid = " \x02[Watch]\x02 {}".format(', '.join(list(set([url['url'] for url in data['vidURLs']]))))
         # vid = " \x02[Watch]\x02 {}".format(data['vidURLs'])
     else:
         vid = ""
@@ -125,7 +126,7 @@ def launch(bot, trigger):
     zone = None
     if args:
         tmp_args = args
-        for idx,arg in enumerate(tmp_args):
+        for idx, arg in enumerate(tmp_args):
             if arg.strip().lower() == "--utc":
                 zone = "UTC"
                 args.pop(idx)
@@ -166,7 +167,7 @@ def spacex(bot, trigger):
     zone = None
     if args:
         tmp_args = args
-        for idx,arg in enumerate(tmp_args):
+        for idx, arg in enumerate(tmp_args):
             if arg.strip().lower() == "--utc":
                 zone = "UTC"
                 args.pop(idx)
